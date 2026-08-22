@@ -175,7 +175,6 @@ Para viabilizar a execução do projeto dentro do prazo da disciplina, o grupo d
 ## 6. Referências
 
 - AHO, A. V.; LAM, M. S.; SETHI, R.; ULLMAN, J. D. *Compiladores: Princípios, Técnicas e Ferramentas*. 2ª ed. Pearson, 2008.
-- Documentação oficial do Flex: https://westes.github.io/flex/manual/
 - Documentação oficial do Bison: https://www.gnu.org/software/bison/manual/
 - Documentação oficial do ECMAScript (JavaScript): https://tc39.es/ecma262/
 - Documentação oficial do Python: https://docs.python.org/3/
