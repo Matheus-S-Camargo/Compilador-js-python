@@ -16,8 +16,7 @@
 3. [Arquitetura Geral do Compilador](#3-arquitetura-geral-do-compilador)
 4. [Primeiros Passos: Implementação do Léxico com Flex](#4-primeiros-passos-implementação-do-léxico-com-flex)
 5. [Escopo e Limitações](#5-escopo-e-limitações)
-6. [Cronograma e Divisão de Tarefas](#6-cronograma-e-divisão-de-tarefas)
-7. [Referências](#7-referências)
+6. [Referências](#6-referências)
 
 ---
 
@@ -173,7 +172,7 @@ Para viabilizar a execução do projeto dentro do prazo da disciplina, o grupo d
 
 ---
 
-## 7. Referências
+## 6. Referências
 
 - AHO, A. V.; LAM, M. S.; SETHI, R.; ULLMAN, J. D. *Compiladores: Princípios, Técnicas e Ferramentas*. 2ª ed. Pearson, 2008.
 - Documentação oficial do Flex: https://westes.github.io/flex/manual/
