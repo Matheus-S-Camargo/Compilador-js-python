@@ -2,7 +2,7 @@
 
 %{
     #include <stdio.h>
-    #include "parser.tab.h"
+    #include "grammar.tab.h"
 %}
 
 %%
