@@ -1,0 +1,10 @@
+# Testes automatizados e execução
+pytest>=8.0.0
+
+# Formatação e validação de código Python gerado / testes
+black>=24.0.0
+flake8>=7.0.0
+ruff>=0.5.0
+
+# Ferramentas auxiliares (opcional para automação/scripts de build)
+rich>=13.7.0
