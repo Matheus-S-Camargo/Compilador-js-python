@@ -87,20 +87,23 @@ extern int yydebug;
     ATRIBUICAO = 288,              /* ATRIBUICAO  */
     MAIS_IGUAL = 289,              /* MAIS_IGUAL  */
     MENOS_IGUAL = 290,             /* MENOS_IGUAL  */
-    IGUALDADE = 291,               /* IGUALDADE  */
-    DIFERENTE = 292,               /* DIFERENTE  */
-    IGUALDADE_ESTRITA = 293,       /* IGUALDADE_ESTRITA  */
-    DIFERENCA_ESTRITA = 294,       /* DIFERENCA_ESTRITA  */
-    MENOR = 295,                   /* MENOR  */
-    MAIOR = 296,                   /* MAIOR  */
-    MENOR_IGUAL = 297,             /* MENOR_IGUAL  */
-    MAIOR_IGUAL = 298,             /* MAIOR_IGUAL  */
-    AND = 299,                     /* AND  */
-    OR = 300,                      /* OR  */
-    NEGACAO = 301,                 /* NEGACAO  */
-    IDENTIFICADOR = 302,           /* IDENTIFICADOR  */
-    NUMERO = 303,                  /* NUMERO  */
-    STRING = 304                   /* STRING  */
+    MULTIPLICACAO_IGUAL = 291,     /* MULTIPLICACAO_IGUAL  */
+    DIVISAO_IGUAL = 292,           /* DIVISAO_IGUAL  */
+    RESTO_IGUAL = 293,             /* RESTO_IGUAL  */
+    IGUALDADE = 294,               /* IGUALDADE  */
+    DIFERENTE = 295,               /* DIFERENTE  */
+    IGUALDADE_ESTRITA = 296,       /* IGUALDADE_ESTRITA  */
+    DIFERENCA_ESTRITA = 297,       /* DIFERENCA_ESTRITA  */
+    MENOR = 298,                   /* MENOR  */
+    MAIOR = 299,                   /* MAIOR  */
+    MENOR_IGUAL = 300,             /* MENOR_IGUAL  */
+    MAIOR_IGUAL = 301,             /* MAIOR_IGUAL  */
+    AND = 302,                     /* AND  */
+    OR = 303,                      /* OR  */
+    NEGACAO = 304,                 /* NEGACAO  */
+    IDENTIFICADOR = 305,           /* IDENTIFICADOR  */
+    NUMERO = 306,                  /* NUMERO  */
+    STRING = 307                   /* STRING  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif

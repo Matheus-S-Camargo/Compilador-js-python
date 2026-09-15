@@ -37,6 +37,9 @@
 "--" { return DECREMENTO; }
 "+=" { return MAIS_IGUAL; }
 "-=" { return MENOS_IGUAL; }
+"*=" { return MULTIPLICACAO_IGUAL; }
+"/=" { return DIVISAO_IGUAL; }
+"%=" { return RESTO_IGUAL; }
 "<=" { return MENOR_IGUAL; }
 ">=" { return MAIOR_IGUAL; }
 "+" { return ADICAO; }
