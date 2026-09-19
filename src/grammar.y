@@ -186,10 +186,3 @@ void yyerror(const char *s) {
     fprintf(stderr, "Erro sintatico na linha %d: %s\n", yylineno, s);
 }
 
-int main(void) {
-    int resultado = yyparse();
-    if (resultado == 0) {
-        printf("Analise sintatica concluida sem erros.\n");
-    }
-    return resultado;
-}
