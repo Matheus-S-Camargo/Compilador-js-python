@@ -155,6 +155,7 @@ expressao
     | expressao MULTIPLICACAO expressao
     | expressao DIVISAO expressao
     | expressao RESTO_DIVISAO expressao
+    | expressao INTERROGACAO expressao DOIS_PONTOS expressao
     | NEGACAO expressao
     | SUBTRACAO expressao %prec NEGACAO
     | INCREMENTO expressao
