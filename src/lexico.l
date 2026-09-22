@@ -1,5 +1,5 @@
 %option yylineno
-
+%option noyywrap
 %{
     #include <stdio.h>
     #include "grammar.tab.h"

@@ -1,10 +1,13 @@
 %{
 #include <stdio.h>
 #include <stdlib.h>
+#include "ast.h"
 
 int yylex(void);
 extern int yylineno;
 void yyerror(const char *s);
+
+No *raiz = NULL;
 %}
 
 /* ===== Palavras reservadas ===== */
