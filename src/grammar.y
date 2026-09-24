@@ -1,10 +1,13 @@
 %{
 #include <stdio.h>
 #include <stdlib.h>
+#include "ast.h"
 
 int yylex(void);
 extern int yylineno;
 void yyerror(const char *s);
+
+No *raiz = NULL;
 %}
 
 /* ===== Palavras reservadas ===== */
@@ -187,10 +190,3 @@ void yyerror(const char *s) {
     fprintf(stderr, "Erro sintatico na linha %d: %s\n", yylineno, s);
 }
 
-int main(void) {
-    int resultado = yyparse();
-    if (resultado == 0) {
-        printf("Analise sintatica concluida sem erros.\n");
-    }
-    return resultado;
-}

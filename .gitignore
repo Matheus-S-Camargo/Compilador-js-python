@@ -1,0 +1,6 @@
+build/
+compilador
+*.tab.c
+*.tab.h
+lex.yy.c
+*.o
