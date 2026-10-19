@@ -1,3 +1,9 @@
+build/
+compilador
+*.tab.c
+*.tab.h
+lex.yy.c
+
 # Virtual Environment
 .venv/
 venv/

@@ -1,10 +1,13 @@
 %{
 #include <stdio.h>
 #include <stdlib.h>
+#include "ast.h"
 
 int yylex(void);
 extern int yylineno;
 void yyerror(const char *s);
+
+No *raiz = NULL;
 %}
 
 /* ===== Palavras reservadas ===== */
@@ -24,6 +27,7 @@ void yyerror(const char *s);
 
 /* ===== Atribuição ===== */
 %token ATRIBUICAO MAIS_IGUAL MENOS_IGUAL
+%token MULTIPLICACAO_IGUAL DIVISAO_IGUAL RESTO_IGUAL
 
 /* ===== Relacionais ===== */
 %token IGUALDADE DIFERENTE IGUALDADE_ESTRITA DIFERENCA_ESTRITA
@@ -36,7 +40,7 @@ void yyerror(const char *s);
 %token IDENTIFICADOR NUMERO STRING
 
 /* ===== Precedência e associatividade (da menor para a maior) ===== */
-%right ATRIBUICAO MAIS_IGUAL MENOS_IGUAL
+%right ATRIBUICAO MAIS_IGUAL MENOS_IGUAL MULTIPLICACAO_IGUAL DIVISAO_IGUAL RESTO_IGUAL
 %right INTERROGACAO DOIS_PONTOS
 %left OR
 %left AND
@@ -136,6 +140,9 @@ expressao
     : expressao ATRIBUICAO expressao
     | expressao MAIS_IGUAL expressao
     | expressao MENOS_IGUAL expressao
+    | expressao MULTIPLICACAO_IGUAL expressao
+    | expressao DIVISAO_IGUAL expressao
+    | expressao RESTO_IGUAL expressao
     | expressao OR expressao
     | expressao AND expressao
     | expressao IGUALDADE expressao
@@ -151,6 +158,7 @@ expressao
     | expressao MULTIPLICACAO expressao
     | expressao DIVISAO expressao
     | expressao RESTO_DIVISAO expressao
+    | expressao INTERROGACAO expressao DOIS_PONTOS expressao
     | NEGACAO expressao
     | SUBTRACAO expressao %prec NEGACAO
     | INCREMENTO expressao
@@ -182,10 +190,3 @@ void yyerror(const char *s) {
     fprintf(stderr, "Erro sintatico na linha %d: %s\n", yylineno, s);
 }
 
-int main(void) {
-    int resultado = yyparse();
-    if (resultado == 0) {
-        printf("Analise sintatica concluida sem erros.\n");
-    }
-    return resultado;
-}
