@@ -57,10 +57,10 @@
 "null" { return VAZIO; }
 "while" { return WHILE; }
 
-[a-zA-Z_][a-zA-Z0-9_]* { return IDENTIFICADOR; }
-[0-9]+ { return NUMERO; }
-'[^']*' { return STRING; }
-\"[^\"]*\" { return STRING; }
+[a-zA-Z_][a-zA-Z0-9_]* { yylval.str =strdup(yytext); return IDENTIFICADOR; }
+[0-9]+ { yylval.str =strdup(yytext); return NUMERO; } 
+'[^']*' { yylval.str =strdup(yytext); return STRING; }
+\"[^\"]*\" { yylval.str =strdup(yytext); return STRING; }
 [ \t\r\n]+ { /* ignora espaços */ }
 . { printf("Erro léxico: caractere desconhecido: '%s'\n", yytext); }
 
