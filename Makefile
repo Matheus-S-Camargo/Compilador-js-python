@@ -13,7 +13,7 @@ $(BUILD)/grammar.tab.c $(BUILD)/grammar.tab.h: src/grammar.y | $(BUILD)
 $(BUILD)/lex.yy.c: src/lexico.l $(BUILD)/grammar.tab.h | $(BUILD)
 	flex -o $(BUILD)/lex.yy.c src/lexico.l
 
-compilador: $(BUILD)/grammar.tab.c $(BUILD)/lex.yy.c src/ast.c src/main.c
+compilador: $(BUILD)/grammar.tab.c $(BUILD)/lex.yy.c src/ast.c src/tabela.c src/semantica.c src/main.c
 	$(CC) $(CFLAGS) -I$(BUILD) -Isrc -o compilador $^
 
 clean:
