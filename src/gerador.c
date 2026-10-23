@@ -60,6 +60,17 @@ static void gerar_expressao(const No *raiz, FILE *saida) {
         return;
     }
 
+    /* Ponto de Integracao (Israel/Bison): operacoes unarias (!, -, ++, --) */
+    if (strcmp(raiz->tipo, "unop") == 0) {
+        if (raiz->valor && strcmp(raiz->valor, "++") != 0 && strcmp(raiz->valor, "--") != 0) {
+            fputs(converter_operador(raiz->valor), saida);
+        }
+        if (raiz->contador_filhos > 0) {
+            gerar_expressao(raiz->filhos[0], saida);
+        }
+        return;
+    }
+
     /* Ponto de Integracao (Israel/Bison): operacao binaria */
     if (raiz->contador_filhos >= 2 && strcmp(raiz->tipo, "atribuicao") != 0 && strcmp(raiz->tipo, "=") != 0) {
         gerar_expressao(raiz->filhos[0], saida);
@@ -97,9 +108,10 @@ static void gerar_codigo_nivel(const No *raiz, FILE *saida, int nivel) {
         strcmp(raiz->tipo, "const") == 0 || strcmp(raiz->tipo, "var") == 0 || 
         strcmp(raiz->tipo, "atribuicao") == 0 || strcmp(raiz->tipo, "=") == 0) {
         emitir_indentacao(saida, nivel);
+        const char *op = (raiz->valor && strcmp(raiz->valor, "") != 0) ? raiz->valor : "=";
         if (raiz->contador_filhos >= 2) {
             gerar_expressao(raiz->filhos[0], saida);
-            fputs(" = ", saida);
+            fprintf(saida, " %s ", op);
             gerar_expressao(raiz->filhos[1], saida);
         } else {
             fprintf(saida, "%s = ", raiz->valor ? raiz->valor : "x");
@@ -107,6 +119,22 @@ static void gerar_codigo_nivel(const No *raiz, FILE *saida, int nivel) {
             else fputs("None", saida);
         }
         fputs("\n", saida);
+        return;
+    }
+
+    /* Ponto de Integracao (Israel/Bison): incremento e decremento como statement */
+    if (strcmp(raiz->tipo, "unop") == 0) {
+        emitir_indentacao(saida, nivel);
+        if (raiz->contador_filhos > 0) {
+            gerar_expressao(raiz->filhos[0], saida);
+            if (raiz->valor && strcmp(raiz->valor, "++") == 0) {
+                fputs(" += 1\n", saida);
+            } else if (raiz->valor && strcmp(raiz->valor, "--") == 0) {
+                fputs(" -= 1\n", saida);
+            } else {
+                fputs("\n", saida);
+            }
+        }
         return;
     }
 
@@ -127,6 +155,21 @@ static void gerar_codigo_nivel(const No *raiz, FILE *saida, int nivel) {
             fputs("else:\n", saida);
             emitir_corpo(raiz->filhos[2], saida, nivel);
         }
+        return;
+    }
+
+    /* Ponto de Integracao (Israel/Bison): for traduzido para while com incremento */
+    if (strcmp(raiz->tipo, "for") == 0 && raiz->contador_filhos >= 4) {
+        if (raiz->filhos[0]) {
+            gerar_codigo_nivel(raiz->filhos[0], saida, nivel);
+        }
+        emitir_indentacao(saida, nivel);
+        fputs("while ", saida);
+        gerar_expressao(raiz->filhos[1], saida);
+        fputs(":\n", saida);
+
+        if (raiz->filhos[3]) gerar_codigo_nivel(raiz->filhos[3], saida, nivel + 1);
+        if (raiz->filhos[2]) gerar_codigo_nivel(raiz->filhos[2], saida, nivel + 1);
         return;
     }
 
