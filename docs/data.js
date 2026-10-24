@@ -1,865 +1,1524 @@
 /**
  * Compilador JS -> Python: Banco de Dados de Conhecimento e Código do Projeto
- * Integração completa de:
- * - explicacao_AST.md (detalhamento linha a linha e teoria de ponteiros/memória)
- * - linguagem.md (tabela completa de tokens, regexes e precedência)
- * - estudo_bison.md e estudo_bison2.md (comunicação Flex/Bison, %union, conflitos)
- * - cronograma.md (atribuição de papéis e responsabilidade dos arquivos)
- * - Código-fonte real e verificado de todos os arquivos do repositório
+ * Base factual 100% alinhada ao código físico do repositório.
  */
 
 const PROJECT_DATA = {
-  info: {
-    name: "Compilador JS → Python",
-    version: "1.0.0 (FCTE - UnB)",
-    discipline: "Compiladores 1",
-    summary: "Um compilador fonte-a-fonte (transpilador) em C que traduz um subconjunto estruturado da linguagem JavaScript em código Python sintaticamente válido e executável.",
-    team: [
-      { name: "Matheus", role: "Líder Técnico & Núcleo da AST", files: ["src/ast.c", "src/ast.h", "src/main.c", "Makefile"] },
-      { name: "Israel", role: "Analisador Sintático & Gramática", files: ["src/grammar.y", "src/lexico.l"] },
-      { name: "Jorge", role: "Análise Semântica & Tabela de Símbolos", files: ["src/tabela.c", "src/tabela.h"] },
-      { name: "Ruan", role: "Gerador de Código Python (Comandos & Expressões)", files: ["src/gerador.c", "src/gerador.h"] },
-      { name: "Lucas", role: "Gerador de Código & Suíte de Testes", files: ["src/gerador.c", "tests/"] }
+  "info": {
+    "name": "Compilador JS → Python",
+    "version": "1.0.0 (FCTE - UnB)",
+    "discipline": "Compiladores 1",
+    "summary": "Um compilador fonte-a-fonte (transpilador) em C que traduz um subconjunto estruturado da linguagem JavaScript em código Python sintaticamente válido e executável.",
+    "team": [
+      {
+        "name": "Matheus",
+        "role": "Líder Técnico & Núcleo da AST",
+        "files": [
+          "src/ast.c",
+          "src/ast.h",
+          "src/main.c",
+          "Makefile"
+        ]
+      },
+      {
+        "name": "Israel",
+        "role": "Analisador Sintático & Gramática",
+        "files": [
+          "src/grammar.y",
+          "src/lexico.l"
+        ]
+      },
+      {
+        "name": "Jorge",
+        "role": "Análise Semântica & Tabela de Símbolos",
+        "files": [
+          "src/tabela.c",
+          "src/tabela.h"
+        ]
+      },
+      {
+        "name": "Ruan",
+        "role": "Gerador de Código Python (Comandos & Expressões)",
+        "files": [
+          "src/gerador.c",
+          "src/gerador.h"
+        ]
+      },
+      {
+        "name": "Lucas",
+        "role": "Gerador de Código & Suíte de Testes",
+        "files": [
+          "src/gerador.c",
+          "tests/"
+        ]
+      }
     ]
   },
-
-  pipeline: [
+  "pipeline": [
     {
-      id: "entrada",
-      name: "Entrada",
-      tag: "1. Entrada",
-      desc: "Código-fonte em JavaScript (variáveis, laços, condicionais e chamadas de função).",
-      icon: "file-code",
-      color: "blue"
+      "id": "entrada",
+      "name": "Entrada",
+      "tag": "1. Entrada",
+      "desc": "Código-fonte em JavaScript (variáveis, laços, condicionais e funções).",
+      "icon": "file-code",
+      "color": "blue"
     },
     {
-      id: "lexico",
-      name: "Léxico (Flex)",
-      tag: "2. Processamento",
-      desc: "src/lexico.l converte o texto em tokens tipados e preenche yylval com literais.",
-      icon: "cpu",
-      color: "purple"
+      "id": "lexico",
+      "name": "Léxico (Flex)",
+      "tag": "2. Processamento",
+      "desc": "src/lexico.l converte o texto em tokens tipados e preenche yylval com literais.",
+      "icon": "cpu",
+      "color": "purple"
     },
     {
-      id: "sintatico",
-      name: "Sintático & AST",
-      tag: "3. AST",
-      desc: "src/grammar.y valida a gramática LALR(1) e monta dinamicamente a árvore em C.",
-      icon: "git-commit",
-      color: "green"
+      "id": "sintatico",
+      "name": "Sintático & AST",
+      "tag": "3. AST",
+      "desc": "src/grammar.y valida a gramática LALR(1) e monta dinamicamente a árvore em C.",
+      "icon": "git-commit",
+      "color": "green"
     },
     {
-      id: "gerador",
-      name: "Geração",
-      tag: "4. Geração",
-      desc: "src/gerador.c percorre a AST e converte chaves em indentação e operadores para Python.",
-      icon: "layers",
-      color: "amber"
+      "id": "gerador",
+      "name": "Geração",
+      "tag": "4. Geração",
+      "desc": "src/gerador.c percorre a AST e converte chaves em indentação e operadores para Python.",
+      "icon": "layers",
+      "color": "amber"
     },
     {
-      id: "saida",
-      name: "Saída",
-      tag: "5. Saída",
-      desc: "Script Python 3 válido impresso em stdout ou salvo em arquivo pronto para rodar.",
-      icon: "check-circle",
-      color: "indigo"
+      "id": "saida",
+      "name": "Saída",
+      "tag": "5. Saída",
+      "desc": "Script Python 3 válido impresso em stdout ou salvo em arquivo pronto para rodar.",
+      "icon": "check-circle",
+      "color": "indigo"
     }
   ],
-
-  modules: [
+  "modules": [
     {
-      id: "gerador",
-      name: "gerador",
-      path: "src/gerador.c",
-      desc: "Responsável por transformar a árvore sintática abstrata em código Python final indentado.",
-      category: "gerador",
-      color: "gerador"
+      "id": "gerador",
+      "name": "gerador",
+      "path": "src/gerador.c",
+      "desc": "Responsável por transformar a árvore sintática abstrata em código Python final indentado.",
+      "category": "gerador",
+      "color": "gerador"
     },
     {
-      id: "ast",
-      name: "ast",
-      path: "src/ast.c",
-      desc: "Constrói, manipula e desaloca os nós homogêneos da Árvore Sintática Abstrata (No*).",
-      category: "ast",
-      color: "ast"
+      "id": "ast",
+      "name": "ast",
+      "path": "src/ast.c",
+      "desc": "Constrói, manipula e desaloca os nós homogêneos da Árvore Sintática Abstrata (No*).",
+      "category": "ast",
+      "color": "ast"
     },
     {
-      id: "parser",
-      name: "parser",
-      path: "src/grammar.y",
-      desc: "Gramática Bison LALR(1) e analisador léxico Flex que regem as regras da linguagem.",
-      category: "core",
-      color: "core"
+      "id": "parser",
+      "name": "parser",
+      "path": "src/grammar.y",
+      "desc": "Gramática Bison LALR(1) e analisador léxico Flex que regem as regras da linguagem.",
+      "category": "core",
+      "color": "core"
     },
     {
-      id: "tabela",
-      name: "tabela",
-      path: "src/tabela.c",
-      desc: "Pilha de tabelas de símbolos para controle de escopo e checagem de variáveis.",
-      category: "outros",
-      color: "outros"
+      "id": "tabela",
+      "name": "tabela",
+      "path": "src/tabela.c",
+      "desc": "Pilha de tabelas de símbolos para controle de escopo e checagem de variáveis.",
+      "category": "outros",
+      "color": "outros"
     }
   ],
-
-  technologies: [
-    { name: "C (C99)", class: "c", desc: "Linguagem de implementação dos núcleos de AST, gerador, tabela e CLI" },
-    { name: "GNU Bison", class: "bison", desc: "Gerador de analisadores sintáticos LALR(1) para construção da AST" },
-    { name: "Flex", class: "flex", desc: "Gerador de analisador léxico baseado em Expressões Regulares" },
-    { name: "GNU Make", class: "make", desc: "Automação de compilação e orquestração do pipeline" },
-    { name: "JavaScript", class: "js", desc: "Linguagem de origem (subconjunto com variáveis, laços e funções)" },
-    { name: "Python", class: "py", desc: "Linguagem de destino (saída formatada com indentação de 4 espaços)" }
+  "technologies": [
+    {
+      "name": "C (C99)",
+      "class": "c",
+      "desc": "Linguagem de implementação dos núcleos de AST, gerador, tabela e CLI"
+    },
+    {
+      "name": "GNU Bison",
+      "class": "bison",
+      "desc": "Gerador de analisadores sintáticos LALR(1) para construção da AST"
+    },
+    {
+      "name": "Flex",
+      "class": "flex",
+      "desc": "Gerador de analisador léxico baseado em Expressões Regulares"
+    },
+    {
+      "name": "GNU Make",
+      "class": "make",
+      "desc": "Automação de compilação e orquestração do pipeline"
+    },
+    {
+      "name": "JavaScript",
+      "class": "js",
+      "desc": "Linguagem de origem (subconjunto com variáveis, laços e funções)"
+    },
+    {
+      "name": "Python",
+      "class": "py",
+      "desc": "Linguagem de destino (saída formatada com indentação de 4 espaços)"
+    }
   ],
-
-  files: {
+  "files": {
     "src/ast.c": {
-      name: "ast.c",
-      path: "src/ast.c",
-      language: "c",
-      module: "ast",
-      author: "Matheus",
-      summary: "Implementação das funções de ciclo de vida da AST: alocação dinâmica com malloc/realloc, impressão recursiva identada e desalocação pós-ordem com free.",
-      linesCount: 56,
-      dependencies: ["src/ast.h", "<stdlib.h>", "<string.h>", "<stdio.h>"],
-      dependents: ["src/grammar.y", "src/gerador.c", "src/main.c", "tests/teste_gerador.c"],
-      code: [
-        '#include <stdlib.h>',
-        '#include <string.h>',
-        '#include <stdio.h>',
-        '#include "ast.h"',
-        '',
-        'No *novo_ponteiro(const char *tipo, const char *valor, int linha){',
-        '    No *tamanho = malloc(sizeof(No));',
-        '    tamanho -> tipo = strdup(tipo);',
-        '    if (valor != NULL){',
-        '        tamanho -> valor = strdup(valor);',
-        '    } else {',
-        '        tamanho -> valor = NULL;',
-        '    }',
-        '    tamanho -> filhos = NULL;',
-        '    tamanho -> contador_filhos = 0;',
-        '    tamanho -> linha = linha; ',
-        '    return tamanho;',
-        '}',
-        '',
-        'void adicionar_filho(No *pai, No *filho){',
-        '    pai -> contador_filhos++;',
-        '    pai->filhos = realloc(pai->filhos, pai->contador_filhos * sizeof(No *));    ',
-        '    pai->filhos[pai->contador_filhos - 1] = filho;',
-        '}',
-        '',
-        'void imprimir_ast(No *raiz, int nivel){',
-        '    if (raiz == NULL){',
-        '        return;',
-        '    }',
-        '',
-        '    for (int i = 0; i < nivel; i++){',
-        '        printf("  ");',
-        '    }',
-        '',
-        '    printf("%s: %s (linha %d)\\n", raiz->tipo, raiz->valor ? raiz->valor : "", raiz->linha);',
-        '',
-        '    for (int i = 0; i < raiz->contador_filhos;i++){',
-        '        imprimir_ast(raiz->filhos[i], nivel + 1);',
-        '    }',
-        '}',
-        '',
-        'void liberar_ast(No *raiz) {',
-        '    if (raiz == NULL){',
-        '        return;',
-        '    }',
-        '    for (int i = 0; i < raiz->contador_filhos; i++) {',
-        '        liberar_ast(raiz->filhos[i]);',
-        '    }',
-        '    free(raiz->filhos);',
-        '    free(raiz->tipo);',
-        '    free(raiz->valor);        ',
-        '    free(raiz);',
-        '}',
-        ''
+      "name": "ast.c",
+      "path": "src/ast.c",
+      "language": "c",
+      "module": "ast",
+      "author": "Matheus",
+      "summary": "Implementação do núcleo da AST: novo_ponteiro (malloc/strdup), adicionar_filho (realloc), imprimir_ast (recursão) e liberar_ast (pós-ordem free).",
+      "linesCount": 56,
+      "dependencies": [
+        "src/ast.h",
+        "<stdlib.h>",
+        "<string.h>",
+        "<stdio.h>"
       ],
-      annotations: {
-        6: {
-          title: "novo_ponteiro(): Construtor de Nós da AST",
-          text: "Devolve um ponteiro No*, preparando o endereço de memória de um novo nó genérico. É chamado a cada regra do Bison.",
-          theory: "Ponteiros e Alocação em Heap: O compilador trabalha em C puro. A cada token ou redução gramatical, um nó precisa persistir além do escopo da função que o gerou."
+      "dependents": [
+        "src/grammar.y",
+        "src/gerador.c",
+        "src/main.c",
+        "tests/teste_gerador.c"
+      ],
+      "code": [
+        "#include <stdlib.h>",
+        "#include <string.h>",
+        "#include <stdio.h>",
+        "#include \"ast.h\"",
+        "",
+        "No *novo_ponteiro(const char *tipo, const char *valor, int linha){",
+        "    No *tamanho = malloc(sizeof(No));",
+        "    tamanho -> tipo = strdup(tipo);",
+        "    if (valor != NULL){",
+        "        tamanho -> valor = strdup(valor);",
+        "    } else {",
+        "        tamanho -> valor = NULL;",
+        "    }",
+        "    tamanho -> filhos = NULL;",
+        "    tamanho -> contador_filhos = 0;",
+        "    tamanho -> linha = linha; ",
+        "    return tamanho;",
+        "}",
+        "",
+        "void adicionar_filho(No *pai, No *filho){",
+        "    pai -> contador_filhos++;",
+        "    pai->filhos = realloc(pai->filhos, pai->contador_filhos * sizeof(No *));    ",
+        "    pai->filhos[pai->contador_filhos - 1] = filho;",
+        "}",
+        "",
+        "void imprimir_ast(No *raiz, int nivel){",
+        "    if (raiz == NULL){",
+        "        return;",
+        "    }",
+        "",
+        "    for (int i = 0; i < nivel; i++){",
+        "        printf(\"  \");",
+        "    }",
+        "",
+        "    printf(\"%s: %s (linha %d)\\n\", raiz->tipo, raiz->valor ? raiz->valor : \"\", raiz->linha);",
+        "",
+        "    for (int i = 0; i < raiz->contador_filhos;i++){",
+        "        imprimir_ast(raiz->filhos[i], nivel + 1);",
+        "    }",
+        "}",
+        "",
+        "",
+        "void liberar_ast(No *raiz) {",
+        "    if (raiz == NULL){",
+        "        return;",
+        "    }",
+        "    for (int i = 0; i < raiz->contador_filhos; i++) {",
+        "        liberar_ast(raiz->filhos[i]);",
+        "    }",
+        "    free(raiz->filhos);",
+        "    free(raiz->tipo);",
+        "    free(raiz->valor);        ",
+        "    free(raiz);",
+        "}",
+        "",
+        ""
+      ],
+      "annotations": {
+        "4": {
+          "title": "Inclusão do Contrato: ast.h",
+          "text": "Inclui a struct No e as funções de manipulação da árvore (novo_no, adicionar_filho, imprimir_ast, liberar_ast).",
+          "theory": "Separação de interface (.h) e implementação (.c) no padrão ANSI C99.",
+          "linkFile": "src/ast.h"
         },
-        7: {
-          title: "Alocação do Bloco Base com malloc",
-          text: "Calcula sizeof(No) bytes (tamanho fixo de metadados) e aloca o espaço na heap. Os filhos dinâmicos ainda não são alocados aqui.",
-          theory: "sizeof(No) aloca apenas o descritor (ponteiros e contadores inteiros), mantendo a alocação inicial mínima."
+        "6": {
+          "title": "novo_ponteiro(): Construtor de Nós da AST",
+          "text": "Aloca um novo descritor de nó No* na heap, inicializa contadores e clona a string de tipo com strdup.",
+          "theory": "Gerenciamento de Heap em C: Nós da AST devem persistir além do escopo da ação sintática do Bison."
         },
-        8: {
-          title: "strdup(tipo) — Imutabilidade de Strings",
-          text: "Cria uma cópia física da string do tipo ('binop', 'num', 'if') em novo endereço. Evita ponteiros para buffers temporários do analisador.",
-          theory: "strdup é essencial porque literais de tipo ou strings de tokens do Flex podem ser sobrescritos pelo buffer léxico nos próximos passos."
+        "7": {
+          "title": "Alocação Base com malloc(sizeof(No))",
+          "text": "Reserva espaço fixo para metadados (tipo, valor, ponteiro de filhos, contador e linha).",
+          "theory": "Mantém alocação leve antes que filhos sejam descobertos."
         },
-        9: {
-          title: "Tratamento de Valor Opcional",
-          text: "Se o nó possuir valor (ex: o número '10' ou operador '+'), duplica com strdup. Se for nó estrutural (como 'bloco' ou 'programa'), define como NULL.",
-          theory: "Evita segmentation fault ao tentar executar strdup em ponteiro NULL."
+        "8": {
+          "title": "strdup(tipo) — Prevenção de Dangling Pointers",
+          "text": "Cria cópia imutável na heap da string do tipo do nó.",
+          "theory": "Buffers do Flex/Bison são reaproveitados nos tokens seguintes; o strdup protege contra sobrescrita."
         },
-        14: {
-          title: "Inicialização de Filhos",
-          text: "Define filhos = NULL e contador_filhos = 0. A lista crescerá sob demanda via realloc.",
-          theory: "Padrão de inicialização segura em C para vetores dinâmicos."
+        "20": {
+          "title": "adicionar_filho(): Expansão Dinâmica de Ramos",
+          "text": "Incrementa o contador e realoca o vetor pai->filhos com realloc.",
+          "theory": "Padrão vetor dinâmico em C: realloc expande a área contígua de ponteiros No**."
         },
-        20: {
-          title: "adicionar_filho(): Acoplamento Pai-Filho",
-          text: "Incrementa o contador de filhos e expande o array dinâmico de ponteiros (pai->filhos) via realloc.",
-          theory: "realloc(pai->filhos, n * sizeof(No*)): redimensiona o vetor de ponteiros mantendo os filhos anteriores e abrindo vaga para o novo ponteiro no índice n-1."
+        "26": {
+          "title": "imprimir_ast(): Varredura Hierárquica",
+          "text": "Imprime o nó atual e dispara chamadas recursivas para cada filho com nível + 1.",
+          "theory": "Recursão em Pré-ordem (visita a raiz e depois os subramos)."
         },
-        26: {
-          title: "imprimir_ast(): Visualização Hierárquica em Árvore",
-          text: "Percorre recursivamente a árvore exibindo cada nó com indentação de 2 espaços por nível de profundidade.",
-          theory: "Recursão em Pré-ordem: primeiro imprime o nó atual (tipo, valor e linha) e em seguida dispara a chamada recursiva para cada filho (nivel + 1)."
-        },
-        42: {
-          title: "liberar_ast(): Coleta Manual de Memória",
-          text: "Libera recursivamente todos os nós e seus dados alocados. Evita vazamentos de memória (memory leaks) em C.",
-          theory: "Desalocação em Pós-ordem: é OBRIGATÓRIO desalocar os filhos antes de liberar o nó pai. Se liberasse o pai primeiro, os ponteiros para os filhos seriam perdidos, causando leak perpétuo."
+        "43": {
+          "title": "liberar_ast(): Desalocação em Pós-Ordem",
+          "text": "Libera primeiro todos os filhos recursivamente antes de desalocar a struct pai.",
+          "theory": "Regra de ouro de memória em C: se o pai fosse liberado primeiro, os ponteiros dos filhos seriam perdidos (memory leak perpétuo)."
         }
       }
     },
-
     "src/ast.h": {
-      name: "ast.h",
-      path: "src/ast.h",
-      language: "c",
-      module: "ast",
-      author: "Matheus",
-      summary: "Definição do contrato da struct No (árvore homogênea) e protótipos de manipulação.",
-      linesCount: 17,
-      dependencies: [],
-      dependents: ["src/ast.c", "src/grammar.y", "src/gerador.h", "src/main.c"],
-      code: [
-        '#ifndef AST_H',
-        '#define AST_H',
-        '',
-        'typedef struct No {',
-        '    char *tipo;',
-        '    char *valor;',
-        '    struct No **filhos;',
-        '    int contador_filhos;',
-        '    int linha;',
-        '} No;',
-        '',
-        'No  *novo_ponteiro(const char *tipo, const char *valor, int linha);',
-        'void adicionar_filho(No *pai, No *filho);',
-        'void imprimir_ast(No *raiz, int nivel);',
-        'void liberar_ast(No *raiz);',
-        '',
-        '#endif'
+      "name": "ast.h",
+      "path": "src/ast.h",
+      "language": "c",
+      "module": "ast",
+      "author": "Matheus",
+      "summary": "Contrato canônico da struct No (árvore homogênea com ponteiro duplo de filhos) e protótipos de manipulação.",
+      "linesCount": 17,
+      "dependencies": [],
+      "dependents": [
+        "src/ast.c",
+        "src/grammar.y",
+        "src/gerador.h",
+        "src/main.c"
       ],
-      annotations: {
-        4: {
-          title: "Struct No: O Bloco Central da AST",
-          text: "Estrutura homogênea genérica com: tipo ('binop', 'if', 'num'), valor opcional, vetor dinâmico de ponteiros para filhos (struct No **filhos), contador de filhos e linha de origem no JS.",
-          theory: "Por que uma struct homogênea? Em equipes com 5 pessoas, criar uma struct específica para cada nó gera acoplamento alto. Uma estrutura genérica permite que qualquer membro crie novas reduções sem mexer na struct base."
+      "code": [
+        "#ifndef AST_H",
+        "#define AST_H",
+        "",
+        "typedef struct No {",
+        "    char *tipo;",
+        "    char *valor;",
+        "    struct No **filhos;",
+        "    int contador_filhos;",
+        "    int linha;",
+        "} No;",
+        "",
+        "No  *novo_ponteiro(const char *tipo, const char *valor, int linha);",
+        "void adicionar_filho(No *pai, No *filho);",
+        "void imprimir_ast(No *raiz, int nivel);",
+        "void liberar_ast(No *raiz);",
+        "",
+        "#endif"
+      ],
+      "annotations": {
+        "4": {
+          "title": "Struct No: O Bloco Central da AST",
+          "text": "Estrutura homogênea com tipo, valor, filhos (No**), contador_filhos e linha.",
+          "theory": "Árvore Homogênea: permite que múltiplos desenvolvedores criem regras sem acoplar structs específicas."
         }
       }
     },
-
-    "src/main.c": {
-      name: "main.c",
-      path: "src/main.c",
-      language: "c",
-      module: "core",
-      author: "Matheus",
-      summary: "Ponto de entrada (CLI) do compilador. Aciona yyparse(), controla flags de linha de comando (--py e --ast) e dispara o gerador de código.",
-      linesCount: 27,
-      dependencies: ["src/ast.h", "src/gerador.h", "<stdio.h>", "<string.h>"],
-      dependents: ["compilador (executável)"],
-      code: [
-        '#include <stdio.h>',
-        '#include <string.h>',
-        '#include "ast.h"',
-        '#include "gerador.h"',
-        '',
-        'extern int yyparse(void);',
-        'extern No *raiz;',
-        '',
-        'int main(int argc, char *argv[]) {',
-        '    int resultado = yyparse();',
-        '',
-        '    if (resultado == 0 && raiz != NULL) {',
-        '        int apenas_py = (argc > 1 && strcmp(argv[1], "--py") == 0);',
-        '        int apenas_ast = (argc > 1 && strcmp(argv[1], "--ast") == 0);',
-        '',
-        '        if (apenas_py) {',
-        '            gerar_codigo(raiz, stdout);',
-        '        } else if (apenas_ast) {',
-        '            imprimir_ast(raiz, 0);',
-        '        } else {',
-        '            printf("Analise sintatica concluida sem erros.\\n");',
-        '            imprimir_ast(raiz, 0);',
-        '        }',
-        '    }',
-        '',
-        '    return resultado;',
-        '}'
-      ],
-      annotations: {
-        6: {
-          title: "Símbolos Externos gerados pelo Bison",
-          text: "yyparse() é a função gerada pelo Bison que inicia o parsing LALR(1). A variável global No *raiz recebe a raiz da árvore construída.",
-          theory: "extern em C indica que o símbolo está definido em outra unidade de compilação (neste caso, em grammar.y / grammar.tab.c)."
-        },
-        10: {
-          title: "Execução do Parser e Verificação de Erro",
-          text: "yyparse() retorna 0 em caso de sucesso e 1 se houver erro sintático. Se for 0 e raiz != NULL, o programa está validado.",
-          theory: "Controle de Fluxo CLI: As flags --py geram diretamente o código Python e --ast exibem a representação em árvore textual."
-        }
-      }
-    },
-
     "src/gerador.c": {
-      name: "gerador.c",
-      path: "src/gerador.c",
-      language: "c",
-      module: "gerador",
-      author: "Ruan & Lucas",
-      summary: "Motor de tradução da AST para código Python. Converte escopos de chaves para 4 espaços de indentação, traduz operadores e desdobra laços for em while.",
-      linesCount: 185,
-      dependencies: ["src/gerador.h", "src/ast.h", "<stdio.h>", "<string.h>"],
-      dependents: ["src/main.c", "tests/teste_gerador.c"],
-      code: [
-        '#include <stdio.h>',
-        '#include <string.h>',
-        '#include "gerador.h"',
-        '',
-        'static void gerar_codigo_nivel(const No *raiz, FILE *saida, int nivel);',
-        '',
-        'static void emitir_indentacao(FILE *saida, int nivel) {',
-        '    for (int i = 0; i < nivel; i++) {',
-        '        fputs("    ", saida);',
-        '    }',
-        '}',
-        '',
-        'static const char *converter_operador(const char *op) {',
-        '    if (!op) return "";',
-        '    if (strcmp(op, "&&") == 0) return "and";',
-        '    if (strcmp(op, "||") == 0) return "or";',
-        '    if (strcmp(op, "===") == 0) return "==";',
-        '    if (strcmp(op, "!==") == 0) return "!=";',
-        '    if (strcmp(op, "!") == 0) return "not ";',
-        '    return op;',
-        '}',
-        '',
-        'static void emitir_corpo(const No *corpo, FILE *saida, int nivel) {',
-        '    if (corpo && (corpo->contador_filhos > 0 || strcmp(corpo->tipo, "bloco") != 0)) {',
-        '        gerar_codigo_nivel(corpo, saida, nivel + 1);',
-        '    } else {',
-        '        emitir_indentacao(saida, nivel + 1);',
-        '        fputs("pass\\n", saida);',
-        '    }',
-        '}',
-        '',
-        'static void gerar_expressao(const No *raiz, FILE *saida) {',
-        '    if (!raiz || !raiz->tipo) return;',
-        '',
-        '    /* Booleanos e Nulo */',
-        '    if (strcmp(raiz->tipo, "bool") == 0 || strcmp(raiz->tipo, "TRUE") == 0 || strcmp(raiz->tipo, "FALSE") == 0) {',
-        '        if ((raiz->valor && (strcmp(raiz->valor, "false") == 0 || strcmp(raiz->valor, "FALSE") == 0)) ||',
-        '            strcmp(raiz->tipo, "FALSE") == 0) {',
-        '            fputs("False", saida);',
-        '        } else {',
-        '            fputs("True", saida);',
-        '        }',
-        '        return;',
-        '    }',
-        '    if (strcmp(raiz->tipo, "null") == 0 || strcmp(raiz->tipo, "VAZIO") == 0) {',
-        '        fputs("None", saida);',
-        '        return;',
-        '    }',
-        '',
-        '    /* Chamadas: console.log vira print */',
-        '    if (strcmp(raiz->tipo, "chamada") == 0) {',
-        '        int eh_log = raiz->valor && (strcmp(raiz->valor, "console.log") == 0 || strcmp(raiz->valor, "log") == 0);',
-        '        fputs(eh_log ? "print(" : (raiz->valor ? raiz->valor : "func"), saida);',
-        '        if (!eh_log) fputs("(", saida);',
-        '        for (int i = 0; i < raiz->contador_filhos; i++) {',
-        '            if (i > 0) fputs(", ", saida);',
-        '            gerar_expressao(raiz->filhos[i], saida);',
-        '        }',
-        '        fputs(")", saida);',
-        '        return;',
-        '    }',
-        '',
-        '    /* Operacoes unarias (!, -, ++) */',
-        '    if (strcmp(raiz->tipo, "unop") == 0) {',
-        '        if (raiz->valor && strcmp(raiz->valor, "++") != 0 && strcmp(raiz->valor, "--") != 0) {',
-        '            fputs(converter_operador(raiz->valor), saida);',
-        '        }',
-        '        if (raiz->contador_filhos > 0) {',
-        '            gerar_expressao(raiz->filhos[0], saida);',
-        '        }',
-        '        return;',
-        '    }',
-        '',
-        '    /* Operacao binaria */',
-        '    if (raiz->contador_filhos >= 2 && strcmp(raiz->tipo, "atribuicao") != 0 && strcmp(raiz->tipo, "=") != 0) {',
-        '        gerar_expressao(raiz->filhos[0], saida);',
-        '        fprintf(saida, " %s ", converter_operador(raiz->valor ? raiz->valor : raiz->tipo));',
-        '        gerar_expressao(raiz->filhos[1], saida);',
-        '        return;',
-        '    }',
-        '',
-        '    if (raiz->valor) {',
-        '        fputs(raiz->valor, saida);',
-        '    }',
-        '}'
+      "name": "gerador.c",
+      "path": "src/gerador.c",
+      "language": "c",
+      "module": "gerador",
+      "author": "Ruan & Lucas",
+      "summary": "Motor de tradução da AST para Python: emite indentação de 4 espaços, traduz operadores (=== -> ==, && -> and, console.log -> print) e converte laços for em while.",
+      "linesCount": 185,
+      "dependencies": [
+        "src/gerador.h",
+        "src/ast.h",
+        "<stdio.h>",
+        "<string.h>"
       ],
-      annotations: {
-        7: {
-          title: "emitir_indentacao(): Gerador de Escopo Python",
-          text: "Emite 4 espaços para cada nível de aninhamento. Como Python é dependente de indentação (off-side rule), este controle substitui as chaves {} do JavaScript.",
-          theory: "Python não usa delimitadores de bloco explícitos. O nível de indentação é mantido pelo parâmetro inteiro 'nivel' que incrementa a cada bloco/função/condicional."
+      "dependents": [
+        "src/main.c",
+        "tests/teste_gerador.c"
+      ],
+      "code": [
+        "#include <stdio.h>",
+        "#include <string.h>",
+        "#include \"gerador.h\"",
+        "",
+        "static void gerar_codigo_nivel(const No *raiz, FILE *saida, int nivel);",
+        "",
+        "static void emitir_indentacao(FILE *saida, int nivel) {",
+        "    for (int i = 0; i < nivel; i++) {",
+        "        fputs(\"    \", saida);",
+        "    }",
+        "}",
+        "",
+        "static const char *converter_operador(const char *op) {",
+        "    if (!op) return \"\";",
+        "    if (strcmp(op, \"&&\") == 0) return \"and\";",
+        "    if (strcmp(op, \"||\") == 0) return \"or\";",
+        "    if (strcmp(op, \"===\") == 0) return \"==\";",
+        "    if (strcmp(op, \"!==\") == 0) return \"!=\";",
+        "    if (strcmp(op, \"!\") == 0) return \"not \";",
+        "    return op;",
+        "}",
+        "",
+        "static void emitir_corpo(const No *corpo, FILE *saida, int nivel) {",
+        "    if (corpo && (corpo->contador_filhos > 0 || strcmp(corpo->tipo, \"bloco\") != 0)) {",
+        "        gerar_codigo_nivel(corpo, saida, nivel + 1);",
+        "    } else {",
+        "        emitir_indentacao(saida, nivel + 1);",
+        "        fputs(\"pass\\n\", saida);",
+        "    }",
+        "}",
+        "",
+        "static void gerar_expressao(const No *raiz, FILE *saida) {",
+        "    if (!raiz || !raiz->tipo) return;",
+        "",
+        "    /* Booleanos e Nulo */",
+        "    if (strcmp(raiz->tipo, \"bool\") == 0 || strcmp(raiz->tipo, \"TRUE\") == 0 || strcmp(raiz->tipo, \"FALSE\") == 0) {",
+        "        if ((raiz->valor && (strcmp(raiz->valor, \"false\") == 0 || strcmp(raiz->valor, \"FALSE\") == 0)) ||",
+        "            strcmp(raiz->tipo, \"FALSE\") == 0) {",
+        "            fputs(\"False\", saida);",
+        "        } else {",
+        "            fputs(\"True\", saida);",
+        "        }",
+        "        return;",
+        "    }",
+        "    if (strcmp(raiz->tipo, \"null\") == 0 || strcmp(raiz->tipo, \"VAZIO\") == 0) {",
+        "        fputs(\"None\", saida);",
+        "        return;",
+        "    }",
+        "",
+        "    /* Ponto de Integracao (Israel/Bison): chamada de console.log ou funcoes gerais */",
+        "    if (strcmp(raiz->tipo, \"chamada\") == 0) {",
+        "        int eh_log = raiz->valor && (strcmp(raiz->valor, \"console.log\") == 0 || strcmp(raiz->valor, \"log\") == 0);",
+        "        fputs(eh_log ? \"print(\" : (raiz->valor ? raiz->valor : \"func\"), saida);",
+        "        if (!eh_log) fputs(\"(\", saida);",
+        "        for (int i = 0; i < raiz->contador_filhos; i++) {",
+        "            if (i > 0) fputs(\", \", saida);",
+        "            gerar_expressao(raiz->filhos[i], saida);",
+        "        }",
+        "        fputs(\")\", saida);",
+        "        return;",
+        "    }",
+        "",
+        "    /* Ponto de Integracao (Israel/Bison): operacoes unarias (!, -, ++, --) */",
+        "    if (strcmp(raiz->tipo, \"unop\") == 0) {",
+        "        if (raiz->valor && strcmp(raiz->valor, \"++\") != 0 && strcmp(raiz->valor, \"--\") != 0) {",
+        "            fputs(converter_operador(raiz->valor), saida);",
+        "        }",
+        "        if (raiz->contador_filhos > 0) {",
+        "            gerar_expressao(raiz->filhos[0], saida);",
+        "        }",
+        "        return;",
+        "    }",
+        "",
+        "    /* Ponto de Integracao (Israel/Bison): operacao binaria */",
+        "    if (raiz->contador_filhos >= 2 && strcmp(raiz->tipo, \"atribuicao\") != 0 && strcmp(raiz->tipo, \"=\") != 0) {",
+        "        gerar_expressao(raiz->filhos[0], saida);",
+        "        fprintf(saida, \" %s \", converter_operador(raiz->valor ? raiz->valor : raiz->tipo));",
+        "        gerar_expressao(raiz->filhos[1], saida);",
+        "        return;",
+        "    }",
+        "",
+        "    /* Folhas literais: identificador, numero, string */",
+        "    if (raiz->valor) {",
+        "        fputs(raiz->valor, saida);",
+        "    }",
+        "}",
+        "",
+        "static void gerar_codigo_nivel(const No *raiz, FILE *saida, int nivel) {",
+        "    if (!raiz || !raiz->tipo) return;",
+        "    if (!saida) saida = stdout;",
+        "",
+        "    /* Ponto de Integracao (Israel/Bison): sequencia de comandos ou bloco */",
+        "    if (strcmp(raiz->tipo, \"programa\") == 0 || strcmp(raiz->tipo, \"bloco\") == 0 || ",
+        "        strcmp(raiz->tipo, \"lista_statements\") == 0) {",
+        "        if (strcmp(raiz->tipo, \"bloco\") == 0 && raiz->contador_filhos == 0) {",
+        "            emitir_indentacao(saida, nivel);",
+        "            fputs(\"pass\\n\", saida);",
+        "            return;",
+        "        }",
+        "        for (int i = 0; i < raiz->contador_filhos; i++) {",
+        "            gerar_codigo_nivel(raiz->filhos[i], saida, nivel);",
+        "        }",
+        "        return;",
+        "    }",
+        "",
+        "    /* Ponto de Integracao (Israel/Bison): declaracao e atribuicao (unificadas em Python) */",
+        "    if (strcmp(raiz->tipo, \"decl_var\") == 0 || strcmp(raiz->tipo, \"let\") == 0 || ",
+        "        strcmp(raiz->tipo, \"const\") == 0 || strcmp(raiz->tipo, \"var\") == 0 || ",
+        "        strcmp(raiz->tipo, \"atribuicao\") == 0 || strcmp(raiz->tipo, \"=\") == 0) {",
+        "        emitir_indentacao(saida, nivel);",
+        "        const char *op = (raiz->valor && strcmp(raiz->valor, \"\") != 0) ? raiz->valor : \"=\";",
+        "        if (raiz->contador_filhos >= 2) {",
+        "            gerar_expressao(raiz->filhos[0], saida);",
+        "            fprintf(saida, \" %s \", op);",
+        "            gerar_expressao(raiz->filhos[1], saida);",
+        "        } else {",
+        "            fprintf(saida, \"%s = \", raiz->valor ? raiz->valor : \"x\");",
+        "            if (raiz->contador_filhos == 1) gerar_expressao(raiz->filhos[0], saida);",
+        "            else fputs(\"None\", saida);",
+        "        }",
+        "        fputs(\"\\n\", saida);",
+        "        return;",
+        "    }",
+        "",
+        "    /* Ponto de Integracao (Israel/Bison): incremento e decremento como statement */",
+        "    if (strcmp(raiz->tipo, \"unop\") == 0) {",
+        "        emitir_indentacao(saida, nivel);",
+        "        if (raiz->contador_filhos > 0) {",
+        "            gerar_expressao(raiz->filhos[0], saida);",
+        "            if (raiz->valor && strcmp(raiz->valor, \"++\") == 0) {",
+        "                fputs(\" += 1\\n\", saida);",
+        "            } else if (raiz->valor && strcmp(raiz->valor, \"--\") == 0) {",
+        "                fputs(\" -= 1\\n\", saida);",
+        "            } else {",
+        "                fputs(\"\\n\", saida);",
+        "            }",
+        "        }",
+        "        return;",
+        "    }",
+        "",
+        "    /* Ponto de Integracao (Israel/Bison): controle de fluxo if e while */",
+        "    if (strcmp(raiz->tipo, \"if\") == 0 || strcmp(raiz->tipo, \"statement_if\") == 0 ||",
+        "        strcmp(raiz->tipo, \"while\") == 0 || strcmp(raiz->tipo, \"statement_while\") == 0) {",
+        "        int eh_if = (raiz->tipo[0] == 'i');",
+        "        emitir_indentacao(saida, nivel);",
+        "        fprintf(saida, \"%s \", eh_if ? \"if\" : \"while\");",
+        "        if (raiz->contador_filhos > 0) gerar_expressao(raiz->filhos[0], saida);",
+        "        else fputs(\"True\", saida);",
+        "        fputs(\":\\n\", saida);",
+        "",
+        "        emitir_corpo(raiz->contador_filhos > 1 ? raiz->filhos[1] : NULL, saida, nivel);",
+        "",
+        "        if (eh_if && raiz->contador_filhos > 2 && raiz->filhos[2]) {",
+        "            emitir_indentacao(saida, nivel);",
+        "            fputs(\"else:\\n\", saida);",
+        "            emitir_corpo(raiz->filhos[2], saida, nivel);",
+        "        }",
+        "        return;",
+        "    }",
+        "",
+        "    /* Ponto de Integracao (Israel/Bison): for traduzido para while com incremento */",
+        "    if (strcmp(raiz->tipo, \"for\") == 0 && raiz->contador_filhos >= 4) {",
+        "        if (raiz->filhos[0]) {",
+        "            gerar_codigo_nivel(raiz->filhos[0], saida, nivel);",
+        "        }",
+        "        emitir_indentacao(saida, nivel);",
+        "        fputs(\"while \", saida);",
+        "        gerar_expressao(raiz->filhos[1], saida);",
+        "        fputs(\":\\n\", saida);",
+        "",
+        "        if (raiz->filhos[3]) gerar_codigo_nivel(raiz->filhos[3], saida, nivel + 1);",
+        "        if (raiz->filhos[2]) gerar_codigo_nivel(raiz->filhos[2], saida, nivel + 1);",
+        "        return;",
+        "    }",
+        "",
+        "    /* Ponto de Integracao (Israel/Bison): chamada ou expressao solta como comando */",
+        "    emitir_indentacao(saida, nivel);",
+        "    gerar_expressao((raiz->contador_filhos > 0 && strcmp(raiz->tipo, \"chamada\") != 0) ? raiz->filhos[0] : raiz, saida);",
+        "    fputs(\"\\n\", saida);",
+        "}",
+        "",
+        "void gerar_codigo(const No *raiz, FILE *saida) {",
+        "    gerar_codigo_nivel(raiz, saida, 0);",
+        "}",
+        ""
+      ],
+      "annotations": {
+        "5": {
+          "title": "Inclusão do Contrato: gerador.h",
+          "text": "Importa a assinatura de gerar_codigo(const No *raiz, FILE *saida), conectando a síntese ao Bison e ao main.",
+          "theory": "Fase de backend e geração de código de destino.",
+          "linkFile": "src/gerador.h"
         },
-        13: {
-          title: "converter_operador(): Mapeamento Semântico",
-          text: "Converte operadores sintáticos de JS para equivalentes em Python: '&&' vira 'and', '||' vira 'or', '===' vira '==', '!==' vira '!=' e '!' vira 'not '.",
-          theory: "Python utiliza palavras-chave legíveis para operadores lógicos em vez de símbolos estilizados de C/JS."
+        "7": {
+          "title": "emitir_indentacao(): Gerador de Escopo Python",
+          "text": "Emite exatamente 4 espaços por nível de profundidade na árvore.",
+          "theory": "Off-side rule: Python delimita blocos estritamente por indentação contígua."
         },
-        23: {
-          title: "emitir_corpo(): Tratamento de Blocos Vazios",
-          text: "Se um bloco em JavaScript for vazio ({}), em Python não se pode deixar a linha sem corpo. A função emite a instrução 'pass'.",
-          theory: "Garante conformidade com a sintaxe obrigatória do Python em blocos vazios."
+        "13": {
+          "title": "converter_operador(): Mapeamento Semântico",
+          "text": "Mapeia && -> and, || -> or, === -> ==, !== -> != e ! -> not.",
+          "theory": "Adequação entre léxico de C/JS e palavras-chave reservadas do Python."
         },
-        51: {
-          title: "Tradução de Chamadas e console.log",
-          text: "Verifica se a chamada é 'console.log' ou 'log'. Se for, traduz para 'print(...)', mapeando os argumentos da lista.",
-          theory: "Mapeamento de biblioteca padrão: JavaScript usa o objeto console com método log; Python usa a built-in function print()."
+        "23": {
+          "title": "emitir_corpo(): Tratamento de Blocos Vazios",
+          "text": "Se o bloco JS estiver vazio ({}), injeta pass no Python.",
+          "theory": "Evita SyntaxError no interpretador Python em blocos sem comandos."
+        },
+        "51": {
+          "title": "console.log -> print()",
+          "text": "Reconhece chamada de log e traduz para print Python.",
+          "theory": "Mapeamento de runtime: JS usa método de console; Python usa built-in print."
+        },
+        "161": {
+          "title": "Desdobramento de for em while",
+          "text": "Translada for (init; cond; inc) para init + while cond: corpo + inc.",
+          "theory": "Python não possui for clássico de 3 cláusulas no estilo C/JS."
         }
       }
     },
-
+    "src/gerador.h": {
+      "name": "gerador.h",
+      "path": "src/gerador.h",
+      "language": "c",
+      "module": "gerador",
+      "author": "Ruan & Lucas",
+      "summary": "Interface do gerador de código: declara gerar_codigo(const No *raiz, FILE *saida).",
+      "linesCount": 10,
+      "dependencies": [
+        "src/ast.h",
+        "<stdio.h>"
+      ],
+      "dependents": [
+        "src/gerador.c",
+        "src/main.c"
+      ],
+      "code": [
+        "#ifndef GERADOR_H",
+        "#define GERADOR_H",
+        "",
+        "#include <stdio.h>",
+        "#include \"ast.h\"",
+        "",
+        "void gerar_codigo(const No *raiz, FILE *saida);",
+        "",
+        "#endif",
+        ""
+      ],
+      "annotations": {
+        "5": {
+          "title": "Inclusão da AST: ast.h",
+          "text": "Importa a struct No e assinaturas para percurso da árvore sintática na fase de síntese.",
+          "theory": "Fase de backend e geração de código de destino.",
+          "linkFile": "src/ast.h"
+        },
+        "7": {
+          "title": "Declaração da API de Geração",
+          "text": "Permite desacoplar a emissão de código para qualquer stream FILE* (stdout ou arquivo em disco).",
+          "theory": "Modularidade de compilação em C."
+        }
+      }
+    },
     "src/grammar.y": {
-      name: "grammar.y",
-      path: "src/grammar.y",
-      language: "yacc",
-      module: "parser",
-      author: "Israel",
-      summary: "Gramática formal LALR(1) em Bison. Define precedência de operadores, tipos semânticos na %union e ações em C que instanciam os nós da AST.",
-      linesCount: 353,
-      dependencies: ["src/ast.h", "src/lexico.l"],
-      dependents: ["src/main.c", "build/grammar.tab.c", "build/grammar.tab.h"],
-      code: [
-        '%{',
-        '#include <stdio.h>',
-        '#include <stdlib.h>',
-        '#include <string.h>',
-        '#include "ast.h"',
-        '',
-        'int yylex(void);',
-        'extern int yylineno;',
-        'void yyerror(const char *s);',
-        '',
-        'No *raiz = NULL;',
-        '',
-        'static No *criar_binop(const char *op, No *esq, No *dir) {',
-        '    No *no = novo_ponteiro("binop", op, yylineno);',
-        '    adicionar_filho(no, esq);',
-        '    adicionar_filho(no, dir);',
-        '    return no;',
-        '}',
-        '%}',
-        '',
-        '%union {',
-        '    char *str;',
-        '    No *no;',
-        '}',
-        '',
-        '%token LET CONST VAR FUNCTION',
-        '%token TRUE FALSE VAZIO',
-        '%token IF ELSE WHILE FOR RETORNO',
-        '%token ADICAO SUBTRACAO MULTIPLICACAO DIVISAO',
-        '%token IGUALDADE DIFERENTE IGUALDADE_ESTRITA DIFERENCA_ESTRITA',
-        '%token <str> IDENTIFICADOR NUMERO STRING',
-        '',
-        '%type <no> programa lista_statements statement bloco',
-        '%type <no> declaracao_var expressao_statement statement_if statement_while',
-        '%type <no> expressao',
-        '',
-        '/* Precedência */',
-        '%right ATRIBUICAO',
-        '%left OR',
-        '%left AND',
-        '%left IGUALDADE DIFERENTE IGUALDADE_ESTRITA DIFERENCA_ESTRITA',
-        '%left ADICAO SUBTRACAO',
-        '%left MULTIPLICACAO DIVISAO',
-        '',
-        '%%',
-        'programa',
-        '    : lista_statements {',
-        '        raiz = $1;',
-        '        $$ = $1;',
-        '    }',
-        '    ;',
-        '%%'
+      "name": "grammar.y",
+      "path": "src/grammar.y",
+      "language": "yacc",
+      "module": "parser",
+      "author": "Israel",
+      "summary": "Gramática LALR(1) em Bison. Declara tokens, precedência (%left/%right), tipos semânticos na %union e ações semânticas que instanciam a AST.",
+      "linesCount": 353,
+      "dependencies": [
+        "src/ast.h",
+        "src/lexico.l"
       ],
-      annotations: {
-        20: {
-          title: "%union: Tipos Semânticos de Tokens e Regras",
-          text: "Define os tipos possíveis de dados retornados: char *str (para literais e identificadores) e No *no (para nós da AST).",
-          theory: "Permite que $1, $2, $$ tenham tipagem forte em C dentro do parser LALR(1)."
+      "dependents": [
+        "src/main.c",
+        "build/grammar.tab.c",
+        "build/grammar.tab.h"
+      ],
+      "code": [
+        "%{",
+        "#include <stdio.h>",
+        "#include <stdlib.h>",
+        "#include <string.h>",
+        "#include \"ast.h\"",
+        "",
+        "int yylex(void);",
+        "extern int yylineno;",
+        "void yyerror(const char *s);",
+        "",
+        "No *raiz = NULL;",
+        "",
+        "static No *criar_binop(const char *op, No *esq, No *dir) {",
+        "    No *no = novo_ponteiro(\"binop\", op, yylineno);",
+        "    adicionar_filho(no, esq);",
+        "    adicionar_filho(no, dir);",
+        "    return no;",
+        "}",
+        "",
+        "static No *criar_atribuicao(const char *op, No *alvo, No *valor) {",
+        "    No *no = novo_ponteiro(\"atribuicao\", op, yylineno);",
+        "    adicionar_filho(no, alvo);",
+        "    adicionar_filho(no, valor);",
+        "    return no;",
+        "}",
+        "",
+        "static No *criar_unop(const char *op, No *filho) {",
+        "    No *no = novo_ponteiro(\"unop\", op, yylineno);",
+        "    adicionar_filho(no, filho);",
+        "    return no;",
+        "}",
+        "",
+        "static void anexar_argumentos(No *chamada, No *args) {",
+        "    if (!args) return;",
+        "    for (int i = 0; i < args->contador_filhos; i++) {",
+        "        adicionar_filho(chamada, args->filhos[i]);",
+        "    }",
+        "    free(args->filhos);",
+        "    free(args->tipo);",
+        "    free(args->valor);",
+        "    free(args);",
+        "}",
+        "%}",
+        "",
+        "%union {",
+        "    char *str;",
+        "    No *no;",
+        "}",
+        "",
+        "/* ===== Palavras reservadas ===== */",
+        "%token LET CONST VAR FUNCTION",
+        "%token TRUE FALSE VAZIO",
+        "%token IF ELSE WHILE FOR RETORNO",
+        "",
+        "/* ===== Delimitadores ===== */",
+        "%token ABRE_PARENTESES FECHA_PARENTESES",
+        "%token ABRE_CHAVES FECHA_CHAVES",
+        "%token ABRE_COLCHETES FECHA_COLCHETES",
+        "%token PONTO_VIRGULA VIRGULA PONTO DOIS_PONTOS INTERROGACAO",
+        "",
+        "/* ===== Operadores aritméticos ===== */",
+        "%token ADICAO SUBTRACAO MULTIPLICACAO DIVISAO RESTO_DIVISAO",
+        "%token INCREMENTO DECREMENTO",
+        "",
+        "/* ===== Atribuição ===== */",
+        "%token ATRIBUICAO MAIS_IGUAL MENOS_IGUAL",
+        "%token MULTIPLICACAO_IGUAL DIVISAO_IGUAL RESTO_IGUAL",
+        "",
+        "/* ===== Relacionais ===== */",
+        "%token IGUALDADE DIFERENTE IGUALDADE_ESTRITA DIFERENCA_ESTRITA",
+        "%token MENOR MAIOR MENOR_IGUAL MAIOR_IGUAL",
+        "",
+        "/* ===== Lógicos ===== */",
+        "%token AND OR NEGACAO",
+        "",
+        "/* ===== Literais e identificadores ===== */",
+        "%token <str> IDENTIFICADOR NUMERO STRING",
+        "",
+        "/* ===== Tipos dos não-terminais ===== */",
+        "%type <no> programa lista_statements statement bloco",
+        "%type <no> declaracao_var expressao_statement statement_if statement_while",
+        "%type <no> statement_for for_init statement_return declaracao_function",
+        "%type <no> lista_parametros lista_argumentos expressao",
+        "%type <str> tipo_var",
+        "",
+        "/* ===== Precedência e associatividade (da menor para a maior) ===== */",
+        "%right ATRIBUICAO MAIS_IGUAL MENOS_IGUAL MULTIPLICACAO_IGUAL DIVISAO_IGUAL RESTO_IGUAL",
+        "%right INTERROGACAO DOIS_PONTOS",
+        "%left OR",
+        "%left AND",
+        "%left IGUALDADE DIFERENTE IGUALDADE_ESTRITA DIFERENCA_ESTRITA",
+        "%left MENOR MAIOR MENOR_IGUAL MAIOR_IGUAL",
+        "%left ADICAO SUBTRACAO",
+        "%left MULTIPLICACAO DIVISAO RESTO_DIVISAO",
+        "%right NEGACAO",
+        "%right INCREMENTO DECREMENTO",
+        "%left ABRE_PARENTESES ABRE_COLCHETES PONTO",
+        "",
+        "%%",
+        "",
+        "/* ===== Estrutura geral ===== */",
+        "programa",
+        "    : lista_statements {",
+        "        raiz = $1;",
+        "        $$ = $1;",
+        "    }",
+        "    ;",
+        "",
+        "lista_statements",
+        "    : /* vazio */ {",
+        "        $$ = novo_ponteiro(\"lista_statements\", NULL, yylineno);",
+        "    }",
+        "    | lista_statements statement {",
+        "        if ($2 != NULL) {",
+        "            adicionar_filho($1, $2);",
+        "        }",
+        "        $$ = $1;",
+        "    }",
+        "    ;",
+        "",
+        "statement",
+        "    : declaracao_var      { $$ = $1; }",
+        "    | expressao_statement { $$ = $1; }",
+        "    | statement_if        { $$ = $1; }",
+        "    | statement_while     { $$ = $1; }",
+        "    | statement_for       { $$ = $1; }",
+        "    | statement_return    { $$ = $1; }",
+        "    | declaracao_function { $$ = $1; }",
+        "    | bloco               { $$ = $1; }",
+        "    ;",
+        "",
+        "bloco",
+        "    : ABRE_CHAVES lista_statements FECHA_CHAVES {",
+        "        free($2->tipo);",
+        "        $2->tipo = strdup(\"bloco\");",
+        "        $$ = $2;",
+        "    }",
+        "    ;",
+        "",
+        "/* ===== Declaração de variáveis: let/const/var ID (= expr)? ; ===== */",
+        "declaracao_var",
+        "    : tipo_var IDENTIFICADOR PONTO_VIRGULA {",
+        "        $$ = novo_ponteiro(\"decl_var\", $2, yylineno);",
+        "        free($2);",
+        "    }",
+        "    | tipo_var IDENTIFICADOR ATRIBUICAO expressao PONTO_VIRGULA {",
+        "        $$ = novo_ponteiro(\"decl_var\", $2, yylineno);",
+        "        adicionar_filho($$, $4);",
+        "        free($2);",
+        "    }",
+        "    ;",
+        "",
+        "tipo_var",
+        "    : LET   { $$ = \"let\"; }",
+        "    | CONST { $$ = \"const\"; }",
+        "    | VAR   { $$ = \"var\"; }",
+        "    ;",
+        "",
+        "/* ===== Expressão como statement (ex: chamada de função, atribuição solta) ===== */",
+        "expressao_statement",
+        "    : expressao PONTO_VIRGULA {",
+        "        $$ = $1;",
+        "    }",
+        "    ;",
+        "",
+        "/* ===== if / else ===== */",
+        "statement_if",
+        "    : IF ABRE_PARENTESES expressao FECHA_PARENTESES statement {",
+        "        $$ = novo_ponteiro(\"if\", NULL, yylineno);",
+        "        adicionar_filho($$, $3);",
+        "        adicionar_filho($$, $5);",
+        "    }",
+        "    | IF ABRE_PARENTESES expressao FECHA_PARENTESES statement ELSE statement {",
+        "        $$ = novo_ponteiro(\"if\", NULL, yylineno);",
+        "        adicionar_filho($$, $3);",
+        "        adicionar_filho($$, $5);",
+        "        adicionar_filho($$, $7);",
+        "    }",
+        "    ;",
+        "",
+        "/* ===== while ===== */",
+        "statement_while",
+        "    : WHILE ABRE_PARENTESES expressao FECHA_PARENTESES statement {",
+        "        $$ = novo_ponteiro(\"while\", NULL, yylineno);",
+        "        adicionar_filho($$, $3);",
+        "        adicionar_filho($$, $5);",
+        "    }",
+        "    ;",
+        "",
+        "/* ===== for (init; condicao; incremento) statement ===== */",
+        "statement_for",
+        "    : FOR ABRE_PARENTESES for_init PONTO_VIRGULA expressao PONTO_VIRGULA expressao FECHA_PARENTESES statement {",
+        "        $$ = novo_ponteiro(\"for\", NULL, yylineno);",
+        "        if ($3 != NULL) {",
+        "            adicionar_filho($$, $3);",
+        "        }",
+        "        adicionar_filho($$, $5);",
+        "        adicionar_filho($$, $7);",
+        "        adicionar_filho($$, $9);",
+        "    }",
+        "    ;",
+        "",
+        "for_init",
+        "    : /* vazio */ {",
+        "        $$ = NULL;",
+        "    }",
+        "    | tipo_var IDENTIFICADOR ATRIBUICAO expressao {",
+        "        $$ = novo_ponteiro(\"decl_var\", $2, yylineno);",
+        "        adicionar_filho($$, $4);",
+        "        free($2);",
+        "    }",
+        "    | expressao {",
+        "        $$ = $1;",
+        "    }",
+        "    ;",
+        "",
+        "/* ===== return ===== */",
+        "statement_return",
+        "    : RETORNO PONTO_VIRGULA {",
+        "        $$ = novo_ponteiro(\"return\", NULL, yylineno);",
+        "    }",
+        "    | RETORNO expressao PONTO_VIRGULA {",
+        "        $$ = novo_ponteiro(\"return\", NULL, yylineno);",
+        "        adicionar_filho($$, $2);",
+        "    }",
+        "    ;",
+        "",
+        "/* ===== function nome(parametros) { corpo } ===== */",
+        "declaracao_function",
+        "    : FUNCTION IDENTIFICADOR ABRE_PARENTESES lista_parametros FECHA_PARENTESES bloco {",
+        "        $$ = novo_ponteiro(\"function\", $2, yylineno);",
+        "        adicionar_filho($$, $4);",
+        "        adicionar_filho($$, $6);",
+        "        free($2);",
+        "    }",
+        "    ;",
+        "",
+        "lista_parametros",
+        "    : /* vazio */ {",
+        "        $$ = novo_ponteiro(\"params\", NULL, yylineno);",
+        "    }",
+        "    | IDENTIFICADOR {",
+        "        $$ = novo_ponteiro(\"params\", NULL, yylineno);",
+        "        adicionar_filho($$, novo_ponteiro(\"id\", $1, yylineno));",
+        "        free($1);",
+        "    }",
+        "    | lista_parametros VIRGULA IDENTIFICADOR {",
+        "        adicionar_filho($1, novo_ponteiro(\"id\", $3, yylineno));",
+        "        free($3);",
+        "        $$ = $1;",
+        "    }",
+        "    ;",
+        "",
+        "/* ===== Expressões ===== */",
+        "expressao",
+        "    : expressao ATRIBUICAO expressao          { $$ = criar_atribuicao(\"=\", $1, $3); }",
+        "    | expressao MAIS_IGUAL expressao          { $$ = criar_atribuicao(\"+=\", $1, $3); }",
+        "    | expressao MENOS_IGUAL expressao         { $$ = criar_atribuicao(\"-=\", $1, $3); }",
+        "    | expressao MULTIPLICACAO_IGUAL expressao { $$ = criar_atribuicao(\"*=\", $1, $3); }",
+        "    | expressao DIVISAO_IGUAL expressao       { $$ = criar_atribuicao(\"/=\", $1, $3); }",
+        "    | expressao RESTO_IGUAL expressao         { $$ = criar_atribuicao(\"%=\", $1, $3); }",
+        "    | expressao OR expressao                  { $$ = criar_binop(\"||\", $1, $3); }",
+        "    | expressao AND expressao                 { $$ = criar_binop(\"&&\", $1, $3); }",
+        "    | expressao IGUALDADE expressao           { $$ = criar_binop(\"==\", $1, $3); }",
+        "    | expressao DIFERENTE expressao           { $$ = criar_binop(\"!=\", $1, $3); }",
+        "    | expressao IGUALDADE_ESTRITA expressao   { $$ = criar_binop(\"===\", $1, $3); }",
+        "    | expressao DIFERENCA_ESTRITA expressao   { $$ = criar_binop(\"!==\", $1, $3); }",
+        "    | expressao MENOR expressao               { $$ = criar_binop(\"<\", $1, $3); }",
+        "    | expressao MAIOR expressao               { $$ = criar_binop(\">\", $1, $3); }",
+        "    | expressao MENOR_IGUAL expressao         { $$ = criar_binop(\"<=\", $1, $3); }",
+        "    | expressao MAIOR_IGUAL expressao         { $$ = criar_binop(\">=\", $1, $3); }",
+        "    | expressao ADICAO expressao              { $$ = criar_binop(\"+\", $1, $3); }",
+        "    | expressao SUBTRACAO expressao           { $$ = criar_binop(\"-\", $1, $3); }",
+        "    | expressao MULTIPLICACAO expressao       { $$ = criar_binop(\"*\", $1, $3); }",
+        "    | expressao DIVISAO expressao             { $$ = criar_binop(\"/\", $1, $3); }",
+        "    | expressao RESTO_DIVISAO expressao       { $$ = criar_binop(\"%\", $1, $3); }",
+        "    | expressao INTERROGACAO expressao DOIS_PONTOS expressao {",
+        "        $$ = novo_ponteiro(\"ternario\", NULL, yylineno);",
+        "        adicionar_filho($$, $1);",
+        "        adicionar_filho($$, $3);",
+        "        adicionar_filho($$, $5);",
+        "    }",
+        "    | NEGACAO expressao                  { $$ = criar_unop(\"!\", $2); }",
+        "    | SUBTRACAO expressao %prec NEGACAO  { $$ = criar_unop(\"-\", $2); }",
+        "    | INCREMENTO expressao               { $$ = criar_unop(\"++\", $2); }",
+        "    | DECREMENTO expressao               { $$ = criar_unop(\"--\", $2); }",
+        "    | expressao INCREMENTO               { $$ = criar_unop(\"++\", $1); }",
+        "    | expressao DECREMENTO               { $$ = criar_unop(\"--\", $1); }",
+        "    | expressao PONTO IDENTIFICADOR {",
+        "        char buf[256];",
+        "        snprintf(buf, sizeof(buf), \"%s.%s\", $1->valor ? $1->valor : \"obj\", $3);",
+        "        $$ = novo_ponteiro(\"membro\", buf, yylineno);",
+        "        adicionar_filho($$, $1);",
+        "        free($3);",
+        "    }",
+        "    | expressao PONTO IDENTIFICADOR ABRE_PARENTESES lista_argumentos FECHA_PARENTESES {",
+        "        char buf[256];",
+        "        snprintf(buf, sizeof(buf), \"%s.%s\", $1->valor ? $1->valor : \"obj\", $3);",
+        "        $$ = novo_ponteiro(\"chamada\", buf, yylineno);",
+        "        anexar_argumentos($$, $5);",
+        "        liberar_ast($1);",
+        "        free($3);",
+        "    }",
+        "    | IDENTIFICADOR ABRE_PARENTESES lista_argumentos FECHA_PARENTESES {",
+        "        $$ = novo_ponteiro(\"chamada\", $1, yylineno);",
+        "        anexar_argumentos($$, $3);",
+        "        free($1);",
+        "    }",
+        "    | expressao ABRE_COLCHETES expressao FECHA_COLCHETES {",
+        "        $$ = novo_ponteiro(\"index\", NULL, yylineno);",
+        "        adicionar_filho($$, $1);",
+        "        adicionar_filho($$, $3);",
+        "    }",
+        "    | ABRE_PARENTESES expressao FECHA_PARENTESES {",
+        "        $$ = $2;",
+        "    }",
+        "    | IDENTIFICADOR {",
+        "        $$ = novo_ponteiro(\"id\", $1, yylineno);",
+        "        free($1);",
+        "    }",
+        "    | NUMERO {",
+        "        $$ = novo_ponteiro(\"num\", $1, yylineno);",
+        "        free($1);",
+        "    }",
+        "    | STRING {",
+        "        $$ = novo_ponteiro(\"str\", $1, yylineno);",
+        "        free($1);",
+        "    }",
+        "    | TRUE  { $$ = novo_ponteiro(\"bool\", \"true\", yylineno); }",
+        "    | FALSE { $$ = novo_ponteiro(\"bool\", \"false\", yylineno); }",
+        "    | VAZIO { $$ = novo_ponteiro(\"null\", \"null\", yylineno); }",
+        "    ;",
+        "",
+        "lista_argumentos",
+        "    : /* vazio */ {",
+        "        $$ = novo_ponteiro(\"args\", NULL, yylineno);",
+        "    }",
+        "    | expressao {",
+        "        $$ = novo_ponteiro(\"args\", NULL, yylineno);",
+        "        adicionar_filho($$, $1);",
+        "    }",
+        "    | lista_argumentos VIRGULA expressao {",
+        "        adicionar_filho($1, $3);",
+        "        $$ = $1;",
+        "    }",
+        "    ;",
+        "",
+        "%%",
+        "",
+        "void yyerror(const char *s) {",
+        "    fprintf(stderr, \"Erro sintatico na linha %d: %s\\n\", yylineno, s);",
+        "}",
+        ""
+      ],
+      "annotations": {
+        "8": {
+          "title": "Integração das Fases: ast.h e gerador.h",
+          "text": "O analisador sintático inclui os cabeçalhos de AST e gerador para construir os nós da árvore durante as reduções gramaticais.",
+          "theory": "O Bison orquestra o parsing e acopla a árvore sintática gerada.",
+          "linkFile": "src/ast.h"
         },
-        37: {
-          title: "Precedência e Associatividade de Operadores",
-          text: "Resolve ambiguidades gramaticais. Linhas mais abaixo têm maior precedência (* e / antes de + e -).",
-          theory: "%left indica associatividade à esquerda (ex: 10 - 5 - 2 vira ((10-5)-2)). Evita conflitos shift/reduce clássicos em expressões matemáticas."
+        "13": {
+          "title": "criar_binop(): Helper Semântico",
+          "text": "Instancia nó do tipo binop com operador e anexa operandos esquerdo e direito.",
+          "theory": "Encapsulamento de criação de subárvore binária."
         },
-        47: {
-          title: "Conexão com a Raiz Global (raiz = $1)",
-          text: "A regra de entrada programa recebe lista_statements e atribui à variável global raiz, disponibilizando a AST inteira para o main.c.",
-          theory: "Ação semântica executada ao concluir a derivação sintática com sucesso."
+        "45": {
+          "title": "%union: Definição de Tipos Semânticos",
+          "text": "Especifica char* str (para literais/ids) e No* no (para subárvores da AST).",
+          "theory": "Garante tipagem em $$, $1, $2 nas reduções LALR(1)."
+        },
+        "86": {
+          "title": "Tabela de Precedência e Associatividade",
+          "text": "Regula ordem de redução: atribuição à direita (%right), lógica e aritmética à esquerda (%left).",
+          "theory": "Resolução determinística de ambiguidades gramaticais sem conflitos shift/reduce."
+        },
+        "102": {
+          "title": "Regra de Entrada: programa -> raiz = $1",
+          "text": "Conecta o nó raiz resultante à variável global externa acessível pelo main.c.",
+          "theory": "Finalização do parsing e entrega da IR (Representação Intermediária)."
         }
       }
     },
-
     "src/lexico.l": {
-      name: "lexico.l",
-      path: "src/lexico.l",
-      language: "lex",
-      module: "parser",
-      author: "Israel",
-      summary: "Especificação léxica em Flex. Mapeia palavras reservadas, operadores, literais e identificadores em tokens com suporte a rastreio de linhas.",
-      linesCount: 71,
-      dependencies: ["src/grammar.tab.h", "src/ast.h"],
-      dependents: ["src/grammar.y", "build/lex.yy.c"],
-      code: [
-        '%option yylineno',
-        '%option noyywrap',
-        '%{',
-        '    #include <stdio.h>',
-        '    #include <string.h>',
-        '    #include "ast.h"',
-        '    #include "grammar.tab.h"',
-        '%}',
-        '',
-        '%%',
-        '"let"           { return LET; }',
-        '"const"         { return CONST; }',
-        '"var"           { return VAR; }',
-        '"function"      { return FUNCTION; }',
-        '"==="           { return IGUALDADE_ESTRITA; }',
-        '"!=="           { return DIFERENCA_ESTRITA; }',
-        '"=="            { return IGUALDADE; }',
-        '"return"        { return RETORNO; }',
-        '"if"            { return IF; }',
-        '"else"          { return ELSE; }',
-        '"&&"            { return AND; }',
-        '"||"            { return OR; }',
-        '"++"            { return INCREMENTO; }',
-        '"--"            { return DECREMENTO; }',
-        '"+="            { return MAIS_IGUAL; }',
-        '"-="            { return MENOS_IGUAL; }',
-        '"+"             { return ADICAO; }',
-        '"-"             { return SUBTRACAO; }',
-        '"*"             { return MULTIPLICACAO; }',
-        '"/"             { return DIVISAO; }',
-        '"="             { return ATRIBUICAO; }',
-        '"//"[^\\n]*     { /* ignora comentário de linha */ }',
-        '"/*"([^*]|\\*+[^*/])*\\*+"/" { /* ignora comentário de bloco */ }',
-        '',
-        '[a-zA-Z_][a-zA-Z0-9_]* { yylval.str = strdup(yytext); return IDENTIFICADOR; }',
-        '[0-9]+                  { yylval.str = strdup(yytext); return NUMERO; }',
-        '\'[^\']*\'                 { yylval.str = strdup(yytext); return STRING; }',
-        '\\"[^\\"]*\\"              { yylval.str = strdup(yytext); return STRING; }',
-        '[ \\t\\r\\n]+              { /* ignora espaços */ }',
-        '.                       { printf("Erro léxico: caractere desconhecido: \'%s\'\\n", yytext); }',
-        '%%'
+      "name": "lexico.l",
+      "path": "src/lexico.l",
+      "language": "lex",
+      "module": "parser",
+      "author": "Israel",
+      "summary": "Scanner léxico em Flex. Expressões regulares para palavras reservadas, operadores, delimitadores, literais e identificadores com yylval.",
+      "linesCount": 71,
+      "dependencies": [
+        "grammar.tab.h",
+        "src/ast.h"
       ],
-      annotations: {
-        1: {
-          title: "%option yylineno: Rastreio Automático de Linhas",
-          text: "Faz com que o Flex atualize automaticamente a variável global yylineno a cada quebra de linha.",
-          theory: "Fundamental para relatar mensagens de erro léxico, sintático e registrar a linha exata de cada nó na AST."
+      "dependents": [
+        "src/grammar.y",
+        "build/lex.yy.c"
+      ],
+      "code": [
+        "%option yylineno",
+        "%option noyywrap",
+        "%{",
+        "    #include <stdio.h>",
+        "    #include <string.h>",
+        "    #include \"ast.h\"",
+        "    #include \"grammar.tab.h\"",
+        "%}",
+        "",
+        "%%",
+        "",
+        "\"let\" { return LET; }",
+        "\"const\" { return CONST; }",
+        "\"var\" { return VAR; }",
+        "\"function\" { return FUNCTION; }",
+        "\"(\" { return ABRE_PARENTESES; }",
+        "\")\" { return FECHA_PARENTESES; }",
+        "\"{\" { return ABRE_CHAVES; }",
+        "\"}\" { return FECHA_CHAVES; }",
+        "\"!==\" { return DIFERENCA_ESTRITA; }",
+        "\"===\" { return IGUALDADE_ESTRITA; }",
+        "\"!=\" { return DIFERENTE; }",
+        "\"!\" { return NEGACAO; }",
+        "\"%\" { return RESTO_DIVISAO; }",
+        "\"[\" { return ABRE_COLCHETES; }",
+        "\"]\" { return FECHA_COLCHETES; }",
+        "\":\" { return DOIS_PONTOS; }",
+        "\"?\" { return INTERROGACAO; }",
+        "\"true\" { return TRUE; }",
+        "\"false\" { return FALSE; }",
+        "\"==\" { return IGUALDADE; }",
+        "\";\" { return PONTO_VIRGULA;}",
+        "\"return\" { return RETORNO; }",
+        "\"if\" { return IF; }",
+        "\"else\" { return ELSE; }",
+        "\"&&\" { return AND; }",
+        "\"||\" { return OR; }",
+        "\"++\" { return INCREMENTO; }",
+        "\"--\" { return DECREMENTO; }",
+        "\"+=\" { return MAIS_IGUAL; }",
+        "\"-=\" { return MENOS_IGUAL; }",
+        "\"*=\" { return MULTIPLICACAO_IGUAL; }",
+        "\"/=\" { return DIVISAO_IGUAL; }",
+        "\"%=\" { return RESTO_IGUAL; }",
+        "\"<=\" { return MENOR_IGUAL; }",
+        "\">=\" { return MAIOR_IGUAL; }",
+        "\"+\" { return ADICAO; }",
+        "\"-\" { return SUBTRACAO; }",
+        "\"*\" { return MULTIPLICACAO; }",
+        "\"//\"[^\\n]* { /* ignora comentário de linha */ }",
+        "\"/*\"([^*]|\\*+[^*/])*\\*+\"/\" { /* ignora comentário de bloco */ }",
+        "\"/\" { return DIVISAO; }",
+        "\"=\" { return ATRIBUICAO; }",
+        "\"<\" { return MENOR; }",
+        "\">\" { return MAIOR;}",
+        "\"for\" { return FOR; }",
+        "\".\" { return PONTO; }",
+        "\",\" { return VIRGULA; }",
+        "\"null\" { return VAZIO; }",
+        "\"while\" { return WHILE; }",
+        "",
+        "[a-zA-Z_][a-zA-Z0-9_]* { yylval.str = strdup(yytext); return IDENTIFICADOR; }",
+        "[0-9]+                  { yylval.str = strdup(yytext); return NUMERO; }",
+        "'[^']*'                 { yylval.str = strdup(yytext); return STRING; }",
+        "\\\"[^\\\"]*\\\"              { yylval.str = strdup(yytext); return STRING; }",
+        "[ \\t\\r\\n]+              { /* ignora espaços */ }",
+        ".                       { printf(\"Erro léxico: caractere desconhecido: '%s'\\n\", yytext); }",
+        "",
+        "",
+        "%%",
+        ""
+      ],
+      "annotations": {
+        "1": {
+          "title": "%option yylineno",
+          "text": "Rastreamento automático da linha do arquivo-fonte para diagnósticos de erro.",
+          "theory": "Facilita anotações precisas de linha em cada nó da AST."
         },
-        11: {
-          title: "Palavras-chave antes de Identificadores (Regra do Primeiro Casamento)",
-          text: "Palavras como 'let', 'const' e 'if' aparecem antes da regex de identificador. Pelo desempate do Flex, ganham prioridade.",
-          theory: "Se a regex de identificador viesse antes, a palavra 'let' casaria como identificador e nunca viraria o token LET."
+        "6": {
+          "title": "Inclusão dos Códigos de Tokens: grammar.tab.h",
+          "text": "Recebe as constantes numéricas de tokens geradas pelo Bison (%token LET, NUMERO, etc.) e a variável yylval.",
+          "theory": "Ponto de acoplamento léxico-sintático: o Flex retorna os inteiros definidos pelo Bison.",
+          "linkFile": "src/grammar.y"
         },
-        34: {
-          title: "yylval.str = strdup(yytext): Passagem de Valor Semântico",
-          text: "Para tokens que carregam valor (identificadores, números e strings), aloca uma cópia do texto com strdup e guarda em yylval.str.",
-          theory: "yytext é um ponteiro temporário gerenciado pelo buffer do Flex. Se não fizesse strdup, o texto seria sobrescrito no próximo token lido."
+        "11": {
+          "title": "Palavras-chave antes de Identificadores",
+          "text": "Regras específicas antecedem o padrão genérico [a-zA-Z_][a-zA-Z0-9_]*.",
+          "theory": "Regra do desempate: primeira regra listada ganha em caso de tamanho idêntico."
+        },
+        "62": {
+          "title": "yylval.str = strdup(yytext)",
+          "text": "Aloca cópia permanente da string do token para uso nas ações da gramática.",
+          "theory": "yytext é volátil no Flex; strdup preserva o literal na heap."
         }
       }
     },
-
+    "src/main.c": {
+      "name": "main.c",
+      "path": "src/main.c",
+      "language": "c",
+      "module": "core",
+      "author": "Matheus",
+      "summary": "Ponto de entrada (CLI): invoca yyparse(), avalia resultado de sucesso e comuta entre flags --py, --ast ou saída padrão.",
+      "linesCount": 27,
+      "dependencies": [
+        "src/ast.h",
+        "src/gerador.h",
+        "<stdio.h>",
+        "<string.h>"
+      ],
+      "dependents": [
+        "compilador.exe"
+      ],
+      "code": [
+        "#include <stdio.h>",
+        "#include <string.h>",
+        "#include \"ast.h\"",
+        "#include \"gerador.h\"",
+        "",
+        "extern int yyparse(void);",
+        "extern No *raiz;",
+        "",
+        "int main(int argc, char *argv[]) {",
+        "    int resultado = yyparse();",
+        "",
+        "    if (resultado == 0 && raiz != NULL) {",
+        "        int apenas_py = (argc > 1 && strcmp(argv[1], \"--py\") == 0);",
+        "        int apenas_ast = (argc > 1 && strcmp(argv[1], \"--ast\") == 0);",
+        "",
+        "        if (apenas_py) {",
+        "            gerar_codigo(raiz, stdout);",
+        "        } else if (apenas_ast) {",
+        "            imprimir_ast(raiz, 0);",
+        "        } else {",
+        "            printf(\"Analise sintatica concluida sem erros.\\n\");",
+        "            imprimir_ast(raiz, 0);",
+        "        }",
+        "    }",
+        "",
+        "    return resultado;",
+        "}"
+      ],
+      "annotations": {
+        "3": {
+          "title": "Inclusão da AST: ast.h",
+          "text": "Importa a struct No e imprimir_ast para manipular e inspecionar a árvore sintática gerada.",
+          "theory": "Contrato de representação intermediária.",
+          "linkFile": "src/ast.h"
+        },
+        "4": {
+          "title": "Inclusão do Backend: gerador.h",
+          "text": "Importa a função gerar_codigo para emitir o código Python final a partir da AST.",
+          "theory": "Invocação da fase de backend pelo ponto de entrada principal.",
+          "linkFile": "src/gerador.h"
+        },
+        "9": {
+          "title": "main(): Controle do Pipeline",
+          "text": "Dispara yyparse() e verifica se a AST foi gerada com sucesso sem erros sintáticos.",
+          "theory": "Orquestração de fluxo de compilador monolítico."
+        },
+        "13": {
+          "title": "Tratamento de Argumentos CLI",
+          "text": "Comuta entre gerar_codigo(raiz, stdout) e imprimir_ast(raiz, 0).",
+          "theory": "Flexibilidade de uso em linha de comando e testes automatizados."
+        }
+      }
+    },
     "src/tabela.c": {
-      name: "tabela.c",
-      path: "src/tabela.c",
-      language: "c",
-      module: "tabela",
-      author: "Jorge",
-      summary: "Estrutura de dados para a Tabela de Símbolos com suporte a escopos aninhados (pilha de escopos até MAX_ESCOPOS=64), busca e inserção de variáveis/funções.",
-      linesCount: 91,
-      dependencies: ["src/tabela.h", "<stdlib.h>", "<string.h>", "<stdio.h>"],
-      dependents: ["tests/teste_tabela.c"],
-      code: [
-        '#include <stdlib.h>',
-        '#include <string.h>',
-        '#include <stdio.h>',
-        '#include "tabela.h"',
-        '',
-        '#define MAX_ESCOPOS 64',
-        '',
-        'static Simbolo *escopos[MAX_ESCOPOS];',
-        'static int topo = -1;   /* -1 = nenhum escopo aberto */',
-        '',
-        'void abrir_escopo(void){',
-        '    if (topo + 1 >= MAX_ESCOPOS){',
-        '        fprintf(stderr, "Erro: limite de %d escopos atingido\\n", MAX_ESCOPOS);',
-        '        exit(1);',
-        '    }',
-        '    topo++;',
-        '    escopos[topo] = NULL;',
-        '}',
-        '',
-        'void fechar_escopo(void){',
-        '    if (topo < 0) return;',
-        '    Simbolo *atual = escopos[topo];',
-        '    while (atual != NULL){',
-        '        Simbolo *prox = atual->prox;',
-        '        free(atual->nome);',
-        '        free(atual->categoria);',
-        '        free(atual->tipo);',
-        '        free(atual);',
-        '        atual = prox;',
-        '    }',
-        '    escopos[topo] = NULL;',
-        '    topo--;',
-        '}',
-        '',
-        'void inserir(const char *nome, const char *categoria, const char *tipo, int constante, int linha){',
-        '    Simbolo *s = malloc(sizeof(Simbolo));',
-        '    s->nome = strdup(nome);',
-        '    s->categoria = strdup(categoria);',
-        '    s->tipo = strdup(tipo);',
-        '    s->constante = constante;',
-        '    s->n_params = 0;',
-        '    s->linha = linha;',
-        '    s->prox = escopos[topo];',
-        '    escopos[topo] = s;',
-        '}',
-        '',
-        'Simbolo *buscar(const char *nome){',
-        '    for (int i = topo; i >= 0; i--){',
-        '        for (Simbolo *s = escopos[i]; s != NULL; s = s->prox){',
-        '            if (strcmp(s->nome, nome) == 0) return s;',
-        '        }',
-        '    }',
-        '    return NULL;',
-        '}'
+      "name": "tabela.c",
+      "path": "src/tabela.c",
+      "language": "c",
+      "module": "tabela",
+      "author": "Jorge",
+      "summary": "Pilha estática de escopos (MAX_ESCOPOS=64) com listas encadeadas de símbolos, permitindo abrir_escopo, fechar_escopo e busca com sombreamento.",
+      "linesCount": 91,
+      "dependencies": [
+        "src/tabela.h",
+        "<stdlib.h>",
+        "<string.h>",
+        "<stdio.h>"
       ],
-      annotations: {
-        8: {
-          title: "Pilha Estática de Escopos Encadeados",
-          text: "Array estático de até 64 escopos aninhados. Cada nível de escopo contém uma lista ligada de Simbolo*.",
-          theory: "Permite sombreamento de variáveis (shadowing): uma variável com mesmo nome em escopo interno sobrepõe a variável do escopo externo enquanto o escopo estiver aberto."
+      "dependents": [
+        "tests/teste_tabela.c"
+      ],
+      "code": [
+        "#include <stdlib.h>",
+        "#include <string.h>",
+        "#include <stdio.h>",
+        "#include \"tabela.h\"",
+        "",
+        "#define MAX_ESCOPOS 64",
+        "",
+        "static Simbolo *escopos[MAX_ESCOPOS];",
+        "static int topo = -1;   /* -1 = nenhum escopo aberto */",
+        "",
+        "void abrir_escopo(void){",
+        "    if (topo + 1 >= MAX_ESCOPOS){",
+        "        fprintf(stderr, \"Erro: limite de %d escopos atingido\\n\", MAX_ESCOPOS);",
+        "        exit(1);",
+        "    }",
+        "    topo++;",
+        "    escopos[topo] = NULL;",
+        "}",
+        "",
+        "void fechar_escopo(void){",
+        "    if (topo < 0){",
+        "        fprintf(stderr, \"Erro: nenhum escopo aberto para fechar\\n\");",
+        "        return;",
+        "    }",
+        "    Simbolo *atual = escopos[topo];",
+        "    while (atual != NULL){",
+        "        Simbolo *prox = atual->prox;",
+        "        free(atual->nome);",
+        "        free(atual->categoria);",
+        "        free(atual->tipo);",
+        "        free(atual);",
+        "        atual = prox;",
+        "    }",
+        "    escopos[topo] = NULL;",
+        "    topo--;",
+        "}",
+        "",
+        "void inserir(const char *nome, const char *categoria, const char *tipo, int constante, int linha){",
+        "    if (topo < 0){",
+        "        fprintf(stderr, \"Erro: inserir '%s' sem escopo aberto\\n\", nome);",
+        "        return;",
+        "    }",
+        "    Simbolo *s = malloc(sizeof(Simbolo));",
+        "    s->nome = strdup(nome);",
+        "    s->categoria = strdup(categoria);",
+        "    s->tipo = strdup(tipo);",
+        "    s->constante = constante;",
+        "    s->n_params = 0;",
+        "    s->linha = linha;",
+        "    /* insere no início da lista do escopo atual */",
+        "    s->prox = escopos[topo];",
+        "    escopos[topo] = s;",
+        "}",
+        "",
+        "Simbolo *buscar_escopo_atual(const char *nome){",
+        "    if (topo < 0){",
+        "        return NULL;",
+        "    }",
+        "    for (Simbolo *s = escopos[topo]; s != NULL; s = s->prox){",
+        "        if (strcmp(s->nome, nome) == 0){",
+        "            return s;",
+        "        }",
+        "    }",
+        "    return NULL;",
+        "}",
+        "",
+        "Simbolo *buscar(const char *nome){",
+        "    for (int i = topo; i >= 0; i--){",
+        "        for (Simbolo *s = escopos[i]; s != NULL; s = s->prox){",
+        "            if (strcmp(s->nome, nome) == 0){",
+        "                return s;",
+        "            }",
+        "        }",
+        "    }",
+        "    return NULL;",
+        "}",
+        "",
+        "void imprimir_tabela(void){",
+        "    printf(\"===== Tabela de simbolos (%d escopo(s) aberto(s)) =====\\n\", topo + 1);",
+        "    for (int i = topo; i >= 0; i--){",
+        "        printf(\"-- Escopo %d --\\n\", i);",
+        "        if (escopos[i] == NULL){",
+        "            printf(\"  (vazio)\\n\");",
+        "        }",
+        "        for (Simbolo *s = escopos[i]; s != NULL; s = s->prox){",
+        "            printf(\"  %-12s categoria=%-9s tipo=%-12s const=%d params=%d linha=%d\\n\",",
+        "                   s->nome, s->categoria, s->tipo, s->constante, s->n_params, s->linha);",
+        "        }",
+        "    }",
+        "}",
+        ""
+      ],
+      "annotations": {
+        "4": {
+          "title": "Inclusão do Contrato: tabela.h",
+          "text": "Inclui as definições da struct Simbolo e as operações de escopo (abrir_escopo, fechar_escopo, inserir e buscar).",
+          "theory": "Separação de interface (.h) e implementação (.c) no padrão ANSI C99.",
+          "linkFile": "src/tabela.h"
         },
-        11: {
-          title: "abrir_escopo() e fechar_escopo()",
-          text: "abrir_escopo incrementa o topo da pilha ao entrar em um bloco ou função. fechar_escopo desaloca todos os símbolos declarados naquele bloco.",
-          theory: "Gerenciamento dinâmico de escopo léxico clássico em compiladores."
+        "8": {
+          "title": "Pilha de Escopos: escopos[MAX_ESCOPOS]",
+          "text": "Vetor que mantém o ponteiro para o início da lista de símbolos de cada nível de aninhamento.",
+          "theory": "Tabela de símbolos escopada clássica com resolução de dentro para fora."
         },
-        47: {
-          title: "buscar(): Resolução de Nomes do Topo à Base",
-          text: "Procura o símbolo iterando do escopo atual (topo) em direção ao escopo global (índice 0).",
-          theory: "Garante que o escopo mais interno tenha precedência sobre escopos superiores na resolução de variáveis."
+        "11": {
+          "title": "abrir_escopo() e fechar_escopo()",
+          "text": "Gerencia entrada e saída de blocos, liberando memória dos identificadores locais.",
+          "theory": "Evita acúmulo de variáveis que já saíram do escopo léxico ativo."
+        },
+        "67": {
+          "title": "buscar(): Varredura Topo -> Base",
+          "text": "Busca do escopo mais interno (topo) até o escopo global (0).",
+          "theory": "Implementa sombreamento léxico (shadowing) correto."
         }
       }
     },
-
-    "src/1o_codigo.js": {
-      name: "1o_codigo.js",
-      path: "src/1o_codigo.js",
-      language: "javascript",
-      module: "testes",
-      author: "Equipe",
-      summary: "Caso de teste real demonstrando declaração de funções, cálculo aritmético, condicionais com if/else, laço for e console.log.",
-      linesCount: 22,
-      dependencies: [],
-      dependents: ["compilador.exe"],
-      code: [
-        'function calcularArea(largura, altura) {',
-        '  let area = largura * altura;',
-        '  return area;',
-        '}',
-        '',
-        'let ativo = true;',
-        'let nome = "retângulo";',
-        'let contador = 0;',
-        '',
-        'if (ativo == true && contador <= 10) {',
-        '  contador++;',
-        '} else {',
-        '  contador--;',
-        '}',
-        '',
-        'let total = 100;',
-        'total += 50;',
-        'total -= 20;',
-        '',
-        'for (let i = 0; i < 5; i++) {',
-        '  console.log(i);',
-        '}'
+    "src/tabela.h": {
+      "name": "tabela.h",
+      "path": "src/tabela.h",
+      "language": "c",
+      "module": "tabela",
+      "author": "Jorge",
+      "summary": "Declaração da struct Simbolo (nome, categoria, tipo, constante, params, linha) e operações da tabela.",
+      "linesCount": 22,
+      "dependencies": [],
+      "dependents": [
+        "src/tabela.c",
+        "tests/teste_tabela.c"
       ],
-      annotations: {
-        1: {
-          title: "Função e Declaração de Parâmetros",
-          text: "Em Python vira 'def calcularArea(largura, altura):', criando bloco indentado.",
-          theory: "Mapeamento direto de assinatura de função imperativa."
+      "code": [
+        "#ifndef TABELA_H",
+        "#define TABELA_H",
+        "",
+        "typedef struct Simbolo {",
+        "    char *nome;",
+        "    char *categoria;   /* \"variavel\" ou \"funcao\" */",
+        "    char *tipo;        /* \"num\", \"str\", \"bool\", \"null\", \"desconhecido\" */",
+        "    int   constante;   /* 1 se declarado com const */",
+        "    int   n_params;    /* só para funcao */",
+        "    int   linha;",
+        "    struct Simbolo *prox;",
+        "} Simbolo;",
+        "",
+        "void     abrir_escopo(void);",
+        "void     fechar_escopo(void);",
+        "void     inserir(const char *nome, const char *categoria, const char *tipo, int constante, int linha);",
+        "Simbolo *buscar(const char *nome);             /* procura em todos os escopos abertos */",
+        "Simbolo *buscar_escopo_atual(const char *nome);",
+        "void     imprimir_tabela(void);",
+        "",
+        "#endif",
+        ""
+      ],
+      "annotations": {
+        "4": {
+          "title": "Struct Simbolo",
+          "text": "Descritor completo de cada variável ou função registrada no analisador semântico.",
+          "theory": "Controle de tipagem, parâmetros e mutabilidade (constante)."
         },
-        10: {
-          title: "Condicional com Operador Lógico '&&'",
-          text: "Em Python é traduzido para 'if ativo == True and contador <= 10:'.",
-          theory: "Demonstra a conversão de operador de && para and e booleano true para True."
+        "14": {
+          "title": "API de Gestão de Escopo",
+          "text": "Declara as operações fundamentais para criar, destruir e buscar identificadores na pilha de tabelas.",
+          "theory": "Gerenciamento de tempo de vida de identificadores em bloco.",
+          "linkFile": "src/tabela.c"
+        }
+      }
+    },
+    "Makefile": {
+      "name": "Makefile",
+      "path": "Makefile",
+      "language": "makefile",
+      "module": "core",
+      "author": "Matheus",
+      "summary": "Arquivo de automação de compilação: alvos bison (-d), flex, gcc, teste_gerador e clean.",
+      "linesCount": 26,
+      "dependencies": [],
+      "dependents": [],
+      "code": [
+        "CC\t= gcc",
+        "CFLAGS\t= -Wall -g",
+        "BUILD\t= build",
+        "",
+        "all: compilador",
+        "",
+        "$(BUILD):",
+        "\tmkdir -p $(BUILD)",
+        "",
+        "$(BUILD)/grammar.tab.c $(BUILD)/grammar.tab.h: src/grammar.y | $(BUILD)",
+        "\tbison -d -o $(BUILD)/grammar.tab.c src/grammar.y",
+        "",
+        "$(BUILD)/lex.yy.c: src/lexico.l $(BUILD)/grammar.tab.h | $(BUILD)",
+        "\tflex -o $(BUILD)/lex.yy.c src/lexico.l",
+        "",
+        "compilador: $(BUILD)/grammar.tab.c $(BUILD)/lex.yy.c src/ast.c src/gerador.c src/main.c",
+        "\t$(CC) $(CFLAGS) -I$(BUILD) -Isrc -o compilador $^",
+        "",
+        "teste_gerador: src/ast.c src/gerador.c tests/teste_gerador.c",
+        "\t$(CC) $(CFLAGS) -Isrc -o tests/teste_gerador.exe $^",
+        "",
+        "test: teste_gerador",
+        "\t./tests/teste_gerador.exe",
+        "",
+        "clean:",
+        "\trm -rf $(BUILD) compilador compilador.exe tests/teste_gerador.exe"
+      ],
+      "annotations": {
+        "10": {
+          "title": "Regra Bison: bison -d",
+          "text": "Gera grammar.tab.c e grammar.tab.h a partir de src/grammar.y.",
+          "theory": "A flag -d cria o cabeçalho compartilhado com os códigos de tokens para o Flex."
         },
-        20: {
-          title: "Desdobramento do Laço for para while",
-          text: "Em Python, o compilador traduz for (let i = 0; i < 5; i++) para uma inicialização 'i = 0' seguida de 'while i < 5:' e incremento 'i += 1' ao final do corpo.",
-          theory: "Como JavaScript suporta for-estilo-C de 3 seções e Python possui apenas for..in iterador, a estratégia semântica do compilador é transladar para um laço while equivalente."
+        "13": {
+          "title": "Regra Flex: flex -o build/lex.yy.c",
+          "text": "Gera o analisador léxico em C a partir de src/lexico.l.",
+          "theory": "Depende de grammar.tab.h para mapear as constantes numéricas de retorno."
+        },
+        "16": {
+          "title": "Compilação do Executável compilador",
+          "text": "Une grammar.tab.c, lex.yy.c, ast.c, gerador.c e main.c via GCC.",
+          "theory": "Link-edição final do binário."
+        }
+      }
+    },
+    "src/1o_codigo.js": {
+      "name": "1o_codigo.js",
+      "path": "src/1o_codigo.js",
+      "language": "javascript",
+      "module": "testes",
+      "author": "Equipe",
+      "summary": "Código de validação real: funções com retorno, variáveis mutáveis, operadores aritméticos compostos, if/else e laço for.",
+      "linesCount": 22,
+      "dependencies": [],
+      "dependents": [
+        "compilador.exe"
+      ],
+      "code": [
+        "function calcularArea(largura, altura) {",
+        "  let area = largura * altura;",
+        "  return area;",
+        "}",
+        "",
+        "let ativo = true;",
+        "let nome = \"retângulo\";",
+        "let contador = 0;",
+        "",
+        "if (ativo == true && contador <= 10) {",
+        "  contador++;",
+        "} else {",
+        "  contador--;",
+        "}",
+        "",
+        "let total = 100;",
+        "total += 50;",
+        "total -= 20;",
+        "",
+        "for (let i = 0; i < 5; i++) {",
+        "  console.log(i);",
+        "}"
+      ],
+      "annotations": {
+        "1": {
+          "title": "Declaração de Função JS",
+          "text": "Assinatura function calcularArea(largura, altura) traduzida para def.",
+          "theory": "Mapeamento de funções em C -> Python."
+        },
+        "10": {
+          "title": "Condicional com && e Operador Relacional",
+          "text": "Conversão de && para and e true para True.",
+          "theory": "Adaptação sintática entre linguagens."
+        },
+        "20": {
+          "title": "Laço for tradicional",
+          "text": "Desdobrado em inicialização + while + incremento.",
+          "theory": "Semântica de iteração."
         }
       }
     }
   },
-
-  learningTopics: [
+  "learningTopics": [
     {
-      id: "tokens",
-      title: "1. Tabela Completa de Tokens & Léxico (Flex)",
-      sourceDoc: "linguagem.md",
-      desc: "Especificação rigorosa dos 40+ tokens aceitos pelo compilador, ordem das expressões regulares e regras de desambiguação.",
-      content: `
-### Especificação da Linguagem (Subconjunto de JavaScript)
-
-Tokens na ordem em que aparecem em \`src/lexico.l\`. Quando duas regras reconhecem o mesmo trecho, o Flex escolhe o **casamento mais longo** (*longest match*); se houver empate de comprimento, vence a regra que aparece **primeiro** no arquivo.
-
-| Token | Expressão Regular | Exemplo | Finalidade |
-|---|---|---|---|
-| \`LET\` | \`"let"\` | \`let\` | Declaração de variável mutável |
-| \`CONST\` | \`"const"\` | \`const\` | Declaração de constante |
-| \`VAR\` | \`"var"\` | \`var\` | Declaração legada compatível |
-| \`FUNCTION\` | \`"function"\` | \`function\` | Declaração de função |
-| \`IF\` / \`ELSE\` | \`"if"\` / \`"else"\` | \`if\` / \`else\` | Controle condicional |
-| \`WHILE\` / \`FOR\` | \`"while"\` / \`"for"\` | \`while\` / \`for\` | Estruturas de repetição |
-| \`RETORNO\` | \`"return"\` | \`return\` | Retorno de função |
-| \`TRUE\` / \`FALSE\` | \`"true"\` / \`"false"\` | \`true\` / \`false\` | Literais booleanos |
-| \`VAZIO\` | \`"null"\` | \`null\` | Literal nulo (None em Python) |
-| \`IGUALDADE_ESTRITA\` | \`"==="\` | \`===\` | Compara valor e tipo (vira == em Py) |
-| \`DIFERENCA_ESTRITA\` | \`"!=="\` | \`!==\` | Diferença estrita (vira != em Py) |
-| \`AND\` / \`OR\` | \`"&&"\` / \`"\\|\\|"\` | \`&&\` / \`\\|\\|\` | Operadores lógicos (and / or) |
-| \`INCREMENTO\` | \`"++"\` | \`++\` | Pós/pré incremento (vira += 1) |
-| \`DECREMENTO\` | \`"--"\` | \`--\` | Pós/pré decremento (vira -= 1) |
-| \`IDENTIFICADOR\` | \`[a-zA-Z_][a-zA-Z0-9_]*\` | \`calcularArea\` | Nomes de variáveis e funções |
-| \`NUMERO\` | \`[0-9]+\` | \`100\` | Literais inteiros |
-| \`STRING\` | \`'[^']*'\\|"([^"]*)"\` | \`"retângulo"\` | Literais de texto |
-      `
+      "id": "tokens",
+      "title": "1. Tabela Completa de Tokens & Léxico (Flex)",
+      "sourceDoc": "linguagem.md",
+      "desc": "Especificação rigorosa dos 40+ tokens aceitos pelo compilador, ordem das expressões regulares e regras de desambiguação.",
+      "content": "### Especificação da Linguagem (Subconjunto de JavaScript)\n\nTokens na ordem em que aparecem em `src/lexico.l`. Quando duas regras reconhecem o mesmo trecho, o Flex escolhe o **casamento mais longo** (*longest match*); se houver empate de comprimento, vence a regra que aparece **primeiro** no arquivo.\n\n| Token | Expressão Regular | Exemplo | Finalidade |\n|---|---|---|---|\n| `LET` | `\"let\"` | `let` | Declaração de variável mutável |\n| `CONST` | `\"const\"` | `const` | Declaração de constante |\n| `VAR` | `\"var\"` | `var` | Declaração legada compatível |\n| `FUNCTION` | `\"function\"` | `function` | Declaração de função |\n| `IF` / `ELSE` | `\"if\"` / `\"else\"` | `if` / `else` | Controle condicional |\n| `WHILE` / `FOR` | `\"while\"` / `\"for\"` | `while` / `for` | Estruturas de repetição |\n| `RETORNO` | `\"return\"` | `return` | Retorno de função |\n| `TRUE` / `FALSE` | `\"true\"` / `\"false\"` | `true` / `false` | Literais booleanos |\n| `VAZIO` | `\"null\"` | `null` | Literal nulo (None em Python) |\n| `IGUALDADE_ESTRITA` | `\"===\"` | `===` | Compara valor e tipo (vira == em Py) |\n| `DIFERENCA_ESTRITA` | `\"!==\"` | `!==` | Diferença estrita (vira != em Py) |\n| `AND` / `OR` | `\"&&\"` / `\"\\|\\|\"` | `&&` / `\\|\\|` | Operadores lógicos (and / or) |\n| `INCREMENTO` | `\"++\"` | `++` | Pós/pré incremento (vira += 1) |\n| `DECREMENTO` | `\"--\"` | `--` | Pós/pré decremento (vira -= 1) |\n| `IDENTIFICADOR` | `[a-zA-Z_][a-zA-Z0-9_]*` | `calcularArea` | Nomes de variáveis e funções |\n| `NUMERO` | `[0-9]+` | `100` | Literais inteiros |\n| `STRING` | `'[^']*'\\|\"([^\"]*)\"` | `\"retângulo\"` | Literais de texto |\n"
     },
     {
-      id: "flex-bison",
-      title: "2. Como Flex e Bison se Comunicam",
-      sourceDoc: "estudo_bison.md & estudo_bison2.md",
-      desc: "O protocolo de integração entre analisador léxico e sintático através de tokens, union e yylval.",
-      content: `
-### O Ponto de Encontro: \`grammar.tab.h\` e \`yylval\`
-
-O Flex não envia texto cru para o Bison. O Bison gera um cabeçalho chamado \`grammar.tab.h\` que atribui um número inteiro para cada token (\`LET = 258\`, \`NUMERO = 259\`, etc.).
-
-\`\`\`
-  src/lexico.l                       src/grammar.y
-┌─────────────────────────┐   gera   ┌──────────────────────────┐
-│ #include "grammar.tab.h"│ ◄─────── │ %token LET NUMERO ...    │
-│                         │          │ %union { char *str; ... }│
-│ "let"   { return LET; } │          └──────────────────────────┘
-│ [0-9]+  {               │                       │ bison -d
-│   yylval.str = strdup();│                       ▼
-│   return NUMERO;        │             grammar.tab.h (códigos)
-│ }                       │             grammar.tab.c (motor)
-└─────────────────────────┘
-\`\`\`
-
-#### Por que precisamos de \`yylval\`?
-Quando o Flex encontra o texto \`"100"\`, ele devolve o código do token \`NUMERO\` pelo retorno da função \`yylex()\`. Mas **qual número era esse?**
-O valor semântico precisa ser transportado através da variável global **\`yylval\`**, tipada pela declaração \`%union\` do Bison.
-      `
+      "id": "flex-bison",
+      "title": "2. Como Flex e Bison se Comunicam",
+      "sourceDoc": "estudo_bison.md & estudo_bison2.md",
+      "desc": "O protocolo de integração entre analisador léxico e sintático através de tokens, union e yylval.",
+      "content": "### O Ponto de Encontro: `grammar.tab.h` e `yylval`\n\nO Flex não envia texto cru para o Bison. O Bison gera um cabeçalho chamado `grammar.tab.h` que atribui um número inteiro para cada token (`LET = 258`, `NUMERO = 259`, etc.).\n\n```\n  src/lexico.l                       src/grammar.y\n┌─────────────────────────┐   gera   ┌──────────────────────────┐\n│ #include \"grammar.tab.h\"│ ◄─────── │ %token LET NUMERO ...    │\n│                         │          │ %union { char *str; ... }│\n│ \"let\"   { return LET; } │          └──────────────────────────┘\n│ [0-9]+  {               │                       │ bison -d\n│   yylval.str = strdup();│                       ▼\n│   return NUMERO;        │             grammar.tab.h (códigos)\n│ }                       │             grammar.tab.c (motor)\n└─────────────────────────┘\n```\n\n#### Por que precisamos de `yylval`?\nQuando o Flex encontra o texto `\"100\"`, ele devolve o código do token `NUMERO` pelo retorno da função `yylex()`. Mas **qual número era esse?**\nO valor semântico precisa ser transportado através da variável global **`yylval`**, tipada pela declaração `%union` do Bison."
     },
     {
-      id: "lalr-conflitos",
-      title: "3. Gramática LALR(1), Precedência e Conflitos",
-      sourceDoc: "estudo_bison.md",
-      desc: "Como o algoritmo LALR(1) resolve precedência de operadores e elimina conflitos shift/reduce e dangling else.",
-      content: `
-### Precedência e Resolução de Conflitos
-
-Em expressões como \`2 + 3 * 4\`, a gramática seria ambígua sem regras de precedência. O Bison resolve isso através das diretivas:
-
-\`\`\`c
-%right ATRIBUICAO MAIS_IGUAL MENOS_IGUAL
-%left OR
-%left AND
-%left IGUALDADE DIFERENTE IGUALDADE_ESTRITA
-%left ADICAO SUBTRACAO
-%left MULTIPLICACAO DIVISAO
-%right NEGACAO INCREMENTO DECREMENTO
-\`\`\`
-
-* **Ordem de linhas:** Linhas mais abaixo possuem **maior precedência** (\`*\` tem prioridade sobre \`+\`).
-* **%left:** O operador associa à esquerda: \`10 - 5 - 2\` vira \`(10 - 5) - 2\`.
-* **%right:** O operador associa à direita: \`a = b = 10\` vira \`a = (b = 10)\`.
-* **Dangling Else:** Quando temos \`if (a) if (b) c(); else d();\`, o Bison resolve o conflito shift/reduce associando o \`else\` ao \`if\` mais próximo (comportamento padrão de JavaScript).
-      `
+      "id": "lalr-conflitos",
+      "title": "3. Gramática LALR(1), Precedência e Conflitos",
+      "sourceDoc": "estudo_bison.md",
+      "desc": "Como o algoritmo LALR(1) resolve precedência de operadores e elimina conflitos shift/reduce e dangling else.",
+      "content": "### Precedência e Resolução de Conflitos\n\nEm expressões como `2 + 3 * 4`, a gramática seria ambígua sem regras de precedência. O Bison resolve isso através das diretivas:\n\n```c\n%right ATRIBUICAO MAIS_IGUAL MENOS_IGUAL\n%left OR\n%left AND\n%left IGUALDADE DIFERENTE IGUALDADE_ESTRITA\n%left ADICAO SUBTRACAO\n%left MULTIPLICACAO DIVISAO\n%right NEGACAO INCREMENTO DECREMENTO\n```\n\n* **Ordem de linhas:** Linhas mais abaixo possuem **maior precedência** (`*` tem prioridade sobre `+`).\n* **%left:** O operador associa à esquerda: `10 - 5 - 2` vira `(10 - 5) - 2`.\n* **%right:** O operador associa à direita: `a = b = 10` vira `a = (b = 10)`.\n* **Dangling Else:** Quando temos `if (a) if (b) c(); else d();`, o Bison resolve o conflito shift/reduce associando o `else` ao `if` mais próximo (comportamento padrão de JavaScript)."
     },
     {
-      id: "ast-memoria",
-      title: "4. Gestão de Memória em C e Árvore (AST)",
-      sourceDoc: "explicacao_AST.md",
-      desc: "Ponteiros duplos, malloc, realloc, strdup e a ordem de desalocação em pós-ordem com free.",
-      content: `
-### Arquitetura de Memória da AST (\`src/ast.c\`)
-
-Ao contrário de linguagens com Garbage Collection (como Python e JavaScript), o compilador em C precisa gerenciar sua própria memória.
-
-1. **Alocação Base (\`malloc\`):** \`malloc(sizeof(No))\` aloca apenas a struct descritora com seus ponteiros.
-2. **Duplicação Segura (\`strdup\`):** Strings de tokens vindas do Flex são duplicadas na heap. Isso garante que o nó mantenha sua string mesmo após o buffer léxico ser reaproveitado.
-3. **Array Dinâmico de Filhos (\`realloc\`):** \`No **filhos\` cresce dinamicamente conforme novos ramos são adicionados:
-\`pai->filhos = realloc(pai->filhos, pai->contador_filhos * sizeof(No *));\`
-4. **Desalocação em Pós-Ordem (\`free\`):**
-\`\`\`c
-void liberar_ast(No *raiz) {
-    if (raiz == NULL) return;
-    for (int i = 0; i < raiz->contador_filhos; i++) {
-        liberar_ast(raiz->filhos[i]); // 1. Primeiro libera os filhos
-    }
-    free(raiz->filhos);              // 2. Libera o vetor de ponteiros
-    free(raiz->tipo);                // 3. Libera as strings clonadas
-    free(raiz->valor);
-    free(raiz);                      // 4. Por fim, libera o nó pai
-}
-\`\`\`
-      `
+      "id": "ast-memoria",
+      "title": "4. Gestão de Memória em C e Árvore (AST)",
+      "sourceDoc": "explicacao_AST.md",
+      "desc": "Ponteiros duplos, malloc, realloc, strdup e a ordem de desalocação em pós-ordem com free.",
+      "content": "### Arquitetura de Memória da AST (`src/ast.c`)\n\nAo contrário de linguagens com Garbage Collection (como Python e JavaScript), o compilador em C precisa gerenciar sua própria memória.\n\n1. **Alocação Base (`malloc`):** `malloc(sizeof(No))` aloca apenas a struct descritora com seus ponteiros.\n2. **Duplicação Segura (`strdup`):** Strings de tokens vindas do Flex são duplicadas na heap. Isso garante que o nó mantenha sua string mesmo após o buffer léxico ser reaproveitado.\n3. **Array Dinâmico de Filhos (`realloc`):** `No **filhos` cresce dinamicamente conforme novos ramos são adicionados:\n`pai->filhos = realloc(pai->filhos, pai->contador_filhos * sizeof(No *));`\n4. **Desalocação em Pós-Ordem (`free`):**\n```c\nvoid liberar_ast(No *raiz) {\n    if (raiz == NULL) return;\n    for (int i = 0; i < raiz->contador_filhos; i++) {\n        liberar_ast(raiz->filhos[i]); // 1. Primeiro libera os filhos\n    }\n    free(raiz->filhos);              // 2. Libera o vetor de ponteiros\n    free(raiz->tipo);                // 3. Libera as strings clonadas\n    free(raiz->valor);\n    free(raiz);                      // 4. Por fim, libera o nó pai\n}\n```"
     },
     {
-      id: "transpilacao-desafios",
-      title: "5. Desafios de Tradução: JavaScript → Python",
-      sourceDoc: "estrutura_documento_inicial.md & gerador.c",
-      desc: "Tradução de chaves para indentação, booleanos, laço for para while e mapeamento da biblioteca padrão.",
-      content: `
-### Desafios Arquiteturais de Transpilação
-
-Um compilador fonte-a-fonte de JS para Python enfrenta divergências fundamentais de paradigma sintático:
-
-1. **Off-side Rule (Indentação Obrigatória):** JavaScript ignora quebras de linha e usa \`{}\`. O gerador em C calcula um contador \`nivel\` e emite exatamente \`nivel * 4\` espaços antes de cada instrução.
-2. **Blocos Vazios em Python:** Em JS, \`if (x) {}\` é válido. Em Python, \`if x:\` sem corpo gera erro de sintaxe. O gerador detecta nós vazios e injeta automaticamente a instrução \`pass\`.
-3. **Desdobramento de \`for\` Clássico:**
-   * JS: \`for (let i = 0; i < 5; i++) { ... }\`
-   * Python não possui laço for com cláusula de inicialização, teste e passo estilo C.
-   * **Solução no Gerador:** Desdobra a inicialização antes do laço, converte para \`while i < 5:\` e injeta \`i += 1\` ao final de cada iteração.
-4. **Mapeamento de Console:** \`console.log(a, b)\` é reconhecido como nó do tipo \`chamada\` e traduzido diretamente para a função embutida \`print(a, b)\`.
-      `
+      "id": "transpilacao-desafios",
+      "title": "5. Desafios de Tradução: JavaScript → Python",
+      "sourceDoc": "estrutura_documento_inicial.md & gerador.c",
+      "desc": "Tradução de chaves para indentação, booleanos, laço for para while e mapeamento da biblioteca padrão.",
+      "content": "### Desafios Arquiteturais de Transpilação\n\nUm compilador fonte-a-fonte de JS para Python enfrenta divergências fundamentais de paradigma sintático:\n\n1. **Off-side Rule (Indentação Obrigatória):** JavaScript ignora quebras de linha e usa `{}`. O gerador em C calcula um contador `nivel` e emite exatamente `nivel * 4` espaços antes de cada instrução.\n2. **Blocos Vazios em Python:** Em JS, `if (x) {}` é válido. Em Python, `if x:` sem corpo gera erro de sintaxe. O gerador detecta nós vazios e injeta automaticamente a instrução `pass`.\n3. **Desdobramento de `for` Clássico:**\n   * JS: `for (let i = 0; i < 5; i++) { ... }`\n   * Python não possui laço for com cláusula de inicialização, teste e passo estilo C.\n   * **Solução no Gerador:** Desdobra a inicialização antes do laço, converte para `while i < 5:` e injeta `i += 1` ao final de cada iteração.\n4. **Mapeamento de Console:** `console.log(a, b)` é reconhecido como nó do tipo `chamada` e traduzido diretamente para a função embutida `print(a, b)`."
     }
   ]
 };
