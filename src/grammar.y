@@ -1,3 +1,7 @@
+%code requires{
+    #include "ast.h"
+}
+
 %{
 #include <stdio.h>
 #include <stdlib.h>
@@ -81,9 +85,18 @@ static void anexar_argumentos(No *chamada, No *args) {
 %type <no> declaracao_var expressao_statement statement_if statement_while
 %type <no> statement_for for_init statement_return declaracao_function
 %type <no> lista_parametros lista_argumentos expressao
+%type <no> parametros_nao_vazios argumentos_nao_vazios
 %type <str> tipo_var
 
+/* Liberar valores descartados pelo parser em erros.
+   tipo_var usa literais; programa entrega sua arvore a raiz. */
+%destructor { free($$); } IDENTIFICADOR NUMERO STRING
+%destructor { if ($$) liberar_ast($$); } <no>
+%destructor { } programa
+
 /* ===== Precedência e associatividade (da menor para a maior) ===== */
+%precedence IF_SEM_ELSE
+%precedence ELSE
 %right ATRIBUICAO MAIS_IGUAL MENOS_IGUAL MULTIPLICACAO_IGUAL DIVISAO_IGUAL RESTO_IGUAL
 %right INTERROGACAO DOIS_PONTOS
 %left OR
@@ -165,7 +178,7 @@ expressao_statement
 
 /* ===== if / else ===== */
 statement_if
-    : IF ABRE_PARENTESES expressao FECHA_PARENTESES statement {
+    : IF ABRE_PARENTESES expressao FECHA_PARENTESES statement %prec IF_SEM_ELSE {
         $$ = novo_ponteiro("if", NULL, yylineno);
         adicionar_filho($$, $3);
         adicionar_filho($$, $5);
@@ -239,12 +252,16 @@ lista_parametros
     : /* vazio */ {
         $$ = novo_ponteiro("params", NULL, yylineno);
     }
-    | IDENTIFICADOR {
+    | parametros_nao_vazios { $$ = $1; }
+    ;
+
+parametros_nao_vazios
+    : IDENTIFICADOR {
         $$ = novo_ponteiro("params", NULL, yylineno);
         adicionar_filho($$, novo_ponteiro("id", $1, yylineno));
         free($1);
     }
-    | lista_parametros VIRGULA IDENTIFICADOR {
+    | parametros_nao_vazios VIRGULA IDENTIFICADOR {
         adicionar_filho($1, novo_ponteiro("id", $3, yylineno));
         free($3);
         $$ = $1;
@@ -335,11 +352,15 @@ lista_argumentos
     : /* vazio */ {
         $$ = novo_ponteiro("args", NULL, yylineno);
     }
-    | expressao {
+    | argumentos_nao_vazios { $$ = $1; }
+    ;
+
+argumentos_nao_vazios
+    : expressao {
         $$ = novo_ponteiro("args", NULL, yylineno);
         adicionar_filho($$, $1);
     }
-    | lista_argumentos VIRGULA expressao {
+    | argumentos_nao_vazios VIRGULA expressao {
         adicionar_filho($1, $3);
         $$ = $1;
     }

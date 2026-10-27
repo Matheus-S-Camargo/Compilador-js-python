@@ -64,7 +64,10 @@
 '[^']*'                 { yylval.str = strdup(yytext); return STRING; }
 \"[^\"]*\"              { yylval.str = strdup(yytext); return STRING; }
 [ \t\r\n]+              { /* ignora espaços */ }
-.                       { printf("Erro léxico: caractere desconhecido: '%s'\n", yytext); }
+.                       {
+    fprintf(stderr, "Erro lexico: caractere desconhecido: '%s'\n", yytext);
+    return (unsigned char) yytext[0];
+}
 
 
 %%
