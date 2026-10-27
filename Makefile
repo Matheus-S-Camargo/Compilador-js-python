@@ -1,5 +1,5 @@
 CC	= gcc
-CFLAGS	= 	-Wall -g
+CFLAGS	= -Wall -g
 BUILD	= build
 
 all: compilador
@@ -16,5 +16,11 @@ $(BUILD)/lex.yy.c: src/lexico.l $(BUILD)/grammar.tab.h | $(BUILD)
 compilador: $(BUILD)/grammar.tab.c $(BUILD)/lex.yy.c src/ast.c src/tabela.c src/semantica.c src/main.c
 	$(CC) $(CFLAGS) -I$(BUILD) -Isrc -o compilador $^
 
+teste_gerador: src/ast.c src/gerador.c tests/teste_gerador.c
+	$(CC) $(CFLAGS) -Isrc -o tests/teste_gerador.exe $^
+
+test: teste_gerador
+	./tests/teste_gerador.exe
+
 clean:
-	rm -rf $(BUILD) compilador
+	rm -rf $(BUILD) compilador compilador.exe tests/teste_gerador.exe

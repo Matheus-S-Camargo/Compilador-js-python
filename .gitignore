@@ -3,4 +3,19 @@ compilador
 *.tab.c
 *.tab.h
 lex.yy.c
+
+# Virtual Environment
+.venv/
+venv/
+ENV/
+env/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C / Compiler build artifacts
+*.exe
 *.o
+*.out
