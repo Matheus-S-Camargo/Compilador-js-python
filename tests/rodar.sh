@@ -1,8 +1,8 @@
 #!/bin/bash
 # Uso: make && ./tests/rodar.sh
-# Roda cada caso de tests/casos no compilador e confere o codigo de saida:
-#   *_erro_*.js -> deve terminar com 2 (erro semantico)
-#   demais      -> deve terminar com 0 (programa aceito)
+# Roda cada caso de tests/casos no compilador e confere:
+# codigo 2 (erro semantico)
+# codigo 0 (programa aceito) 
 cd "$(dirname "$0")/.."
 
 COMPILADOR=./compilador
@@ -10,6 +10,10 @@ if [ ! -x "$COMPILADOR" ]; then
     echo "Compilador nao encontrado. Rode 'make' antes."
     exit 1
 fi
+
+saida=$(mktemp)
+mensagens=$(mktemp)
+trap 'rm -f "$saida" "$mensagens"' EXIT
 
 ok=0
 falha=0
@@ -19,17 +23,28 @@ for caso in tests/casos/*.js; do
         *)        esperado=0 ;;
     esac
 
-    mensagens=$("$COMPILADOR" < "$caso" 2>&1 >/dev/null)
+    "$COMPILADOR" < "$caso" > "$saida" 2> "$mensagens"
     obtido=$?
 
-    if [ "$obtido" -eq "$esperado" ]; then
+    problemas=""
+    [ "$obtido" -ne "$esperado" ] && problemas+="esperado codigo $esperado, obtido $obtido; "
+    if [ "$esperado" -eq 2 ]; then
+        [ -s "$saida" ] && problemas+="gerou codigo Python mesmo com erro; "
+        while IFS= read -r msg; do
+            grep -qF "$msg" "$mensagens" || problemas+="faltou mensagem: $msg; "
+        done < <(sed -n 's/^\/\/ Esperado: "\(.*\)"\r\?$/\1/p' "$caso")
+    else
+        [ -s "$mensagens" ] && problemas+="stderr nao vazio; "
+    fi
+
+    if [ -z "$problemas" ]; then
         echo "OK     $caso (codigo $obtido)"
         ok=$((ok + 1))
     else
-        echo "FALHA  $caso (esperado $esperado, obtido $obtido)"
+        echo "FALHA  $caso (${problemas%; })"
         falha=$((falha + 1))
     fi
-    [ -n "$mensagens" ] && echo "$mensagens" | sed 's/^/         /'
+    [ -s "$mensagens" ] && sed 's/^/         /' "$mensagens"
 done
 
 echo
