@@ -38,19 +38,32 @@ static void visitar_filhos(No *no){
 }
 
 static void visitar_declaracao(No *no){
-    No *ident = no->filhos[0];
-    No *valor = no->contador_filhos > 1 ? no->filhos[1] : NULL;
+    const char *nome = NULL;
+    No *valor = NULL;
+    int eh_const = 0;
+    int linha = no->linha;
+
+    if (no->filhos && no->contador_filhos > 0 &&
+        (strcmp(no->filhos[0]->tipo, "IDENT") == 0 || strcmp(no->filhos[0]->tipo, "id") == 0)) {
+        nome = no->filhos[0]->valor;
+        linha = no->filhos[0]->linha;
+        valor = no->contador_filhos > 1 ? no->filhos[1] : NULL;
+        eh_const = (no->valor && strcmp(no->valor, "const") == 0);
+    } else {
+        nome = no->valor;
+        valor = no->contador_filhos > 0 ? no->filhos[0] : NULL;
+    }
+    if (!nome) return;
 
     visitar(valor);
 
-    Simbolo *anterior = buscar_escopo_atual(ident->valor);
+    Simbolo *anterior = buscar_escopo_atual(nome);
     if (anterior != NULL){
-        erro_semantico(ident->linha, "'%s' redeclarada no mesmo escopo (declarada antes na linha %d)",
-                       ident->valor, anterior->linha);
+        erro_semantico(linha, "'%s' redeclarada no mesmo escopo (declarada antes na linha %d)",
+                       nome, anterior->linha);
         return;
     }
-    inserir(ident->valor, "variavel", tipo_do_valor(valor),
-            strcmp(no->valor, "const") == 0, ident->linha);
+    inserir(nome, "variavel", tipo_do_valor(valor), eh_const, linha);
 }
 
 static void visitar(No *no){
@@ -58,13 +71,13 @@ static void visitar(No *no){
         return;   // partes da gramatica que ainda nao geram AST 
     }
 
-    if (strcmp(no->tipo, "DECL_VAR") == 0){
+    if (strcmp(no->tipo, "DECL_VAR") == 0 || strcmp(no->tipo, "decl_var") == 0){
         visitar_declaracao(no);
-    } else if (strcmp(no->tipo, "IDENT") == 0){
+    } else if (strcmp(no->tipo, "IDENT") == 0 || strcmp(no->tipo, "id") == 0){
         if (buscar(no->valor) == NULL){
             erro_semantico(no->linha, "variavel '%s' nao declarada", no->valor);
         }
-    } else if (strcmp(no->tipo, "BLOCO") == 0){
+    } else if (strcmp(no->tipo, "BLOCO") == 0 || strcmp(no->tipo, "bloco") == 0){
         abrir_escopo();
         visitar_filhos(no);
         fechar_escopo();
