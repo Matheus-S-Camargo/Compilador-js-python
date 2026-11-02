@@ -19,8 +19,9 @@ compilador: $(BUILD)/grammar.tab.c $(BUILD)/lex.yy.c src/ast.c src/tabela.c src/
 teste_gerador: src/ast.c src/gerador.c tests/teste_gerador.c
 	$(CC) $(CFLAGS) -Isrc -o tests/teste_gerador.exe $^
 
-test: teste_gerador
+test: teste_gerador compilador
 	./tests/teste_gerador.exe
+	./tests/rodar.sh
 
 clean:
 	rm -rf $(BUILD) compilador compilador.exe tests/teste_gerador.exe
