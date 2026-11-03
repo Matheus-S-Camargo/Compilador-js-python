@@ -3,6 +3,7 @@
 #include "gerador.h"
 
 static void gerar_codigo_nivel(const No *raiz, FILE *saida, int nivel);
+static void gerar_expressao(const No *raiz, FILE *saida);
 
 static void emitir_indentacao(FILE *saida, int nivel) {
     for (int i = 0; i < nivel; i++) {
@@ -18,6 +19,38 @@ static const char *converter_operador(const char *op) {
     if (strcmp(op, "!==") == 0) return "!=";
     if (strcmp(op, "!") == 0) return "not ";
     return op;
+}
+
+static int precedencia_op(const char *op) {
+    if (!op) return 0;
+    if (strcmp(op, "||") == 0) return 1;
+    if (strcmp(op, "&&") == 0) return 2;
+    if (strcmp(op, "==") == 0 || strcmp(op, "!=") == 0 ||
+        strcmp(op, "===") == 0 || strcmp(op, "!==") == 0) return 3;
+    if (strcmp(op, "<") == 0 || strcmp(op, "<=") == 0 ||
+        strcmp(op, ">") == 0 || strcmp(op, ">=") == 0) return 4;
+    if (strcmp(op, "+") == 0 || strcmp(op, "-") == 0) return 5;
+    if (strcmp(op, "*") == 0 || strcmp(op, "/") == 0 || strcmp(op, "%") == 0) return 6;
+    return 0;
+}
+
+static void gerar_subexpressao(const No *filho, const No *pai, int eh_direita, FILE *saida) {
+    if (!filho) return;
+    int prec_pai = precedencia_op(pai->valor ? pai->valor : pai->tipo);
+    int prec_filho = (strcmp(filho->tipo, "binop") == 0) ? precedencia_op(filho->valor ? filho->valor : filho->tipo) : 0;
+    int precisa_paren = 0;
+    if (prec_filho > 0) {
+        if (prec_filho < prec_pai) {
+            precisa_paren = 1;
+        } else if (prec_filho == prec_pai && eh_direita) {
+            if (pai->valor && (strcmp(pai->valor, "-") == 0 || strcmp(pai->valor, "/") == 0 || strcmp(pai->valor, "%") == 0)) {
+                precisa_paren = 1;
+            }
+        }
+    }
+    if (precisa_paren) fputs("(", saida);
+    gerar_expressao(filho, saida);
+    if (precisa_paren) fputs(")", saida);
 }
 
 static void emitir_corpo(const No *corpo, FILE *saida, int nivel) {
@@ -73,9 +106,9 @@ static void gerar_expressao(const No *raiz, FILE *saida) {
 
     /* Ponto de Integracao (Israel/Bison): operacao binaria */
     if (raiz->contador_filhos >= 2 && strcmp(raiz->tipo, "atribuicao") != 0 && strcmp(raiz->tipo, "=") != 0) {
-        gerar_expressao(raiz->filhos[0], saida);
+        gerar_subexpressao(raiz->filhos[0], raiz, 0, saida);
         fprintf(saida, " %s ", converter_operador(raiz->valor ? raiz->valor : raiz->tipo));
-        gerar_expressao(raiz->filhos[1], saida);
+        gerar_subexpressao(raiz->filhos[1], raiz, 1, saida);
         return;
     }
 
@@ -100,6 +133,36 @@ static void gerar_codigo_nivel(const No *raiz, FILE *saida, int nivel) {
         for (int i = 0; i < raiz->contador_filhos; i++) {
             gerar_codigo_nivel(raiz->filhos[i], saida, nivel);
         }
+        return;
+    }
+
+    /* Ponto de Integracao: declaracao de funcao */
+    if (strcmp(raiz->tipo, "function") == 0 && raiz->contador_filhos >= 2) {
+        emitir_indentacao(saida, nivel);
+        fprintf(saida, "def %s(", raiz->valor ? raiz->valor : "funcao");
+        No *params = raiz->filhos[0];
+        if (params) {
+            for (int i = 0; i < params->contador_filhos; i++) {
+                if (i > 0) fputs(", ", saida);
+                if (params->filhos[i]->valor) {
+                    fputs(params->filhos[i]->valor, saida);
+                }
+            }
+        }
+        fputs("):\n", saida);
+        emitir_corpo(raiz->filhos[1], saida, nivel);
+        return;
+    }
+
+    /* Ponto de Integracao: comando return */
+    if (strcmp(raiz->tipo, "return") == 0) {
+        emitir_indentacao(saida, nivel);
+        fputs("return", saida);
+        if (raiz->contador_filhos > 0 && raiz->filhos[0]) {
+            fputs(" ", saida);
+            gerar_expressao(raiz->filhos[0], saida);
+        }
+        fputs("\n", saida);
         return;
     }
 
@@ -160,7 +223,7 @@ static void gerar_codigo_nivel(const No *raiz, FILE *saida, int nivel) {
 
     /* Ponto de Integracao (Israel/Bison): for traduzido para while com incremento */
     if (strcmp(raiz->tipo, "for") == 0 && raiz->contador_filhos >= 4) {
-        if (raiz->filhos[0]) {
+        if (raiz->filhos[0] && strcmp(raiz->filhos[0]->tipo, "vazio") != 0) {
             gerar_codigo_nivel(raiz->filhos[0], saida, nivel);
         }
         emitir_indentacao(saida, nivel);

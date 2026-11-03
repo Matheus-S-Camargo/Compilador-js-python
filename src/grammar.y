@@ -206,6 +206,8 @@ statement_for
         $$ = novo_ponteiro("for", NULL, yylineno);
         if ($3 != NULL) {
             adicionar_filho($$, $3);
+        } else {
+            adicionar_filho($$, novo_ponteiro("vazio", NULL, yylineno));
         }
         adicionar_filho($$, $5);
         adicionar_filho($$, $7);

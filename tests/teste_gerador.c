@@ -82,7 +82,7 @@ int main(void) {
     }
 
     printf("\nExecutando validacao automatica no interpretador Python:\n");
-    int status = system("python tests/saida_teste.py");
+    int status = system("python3 tests/saida_teste.py 2>/dev/null || python tests/saida_teste.py");
     printf("\nStatus da execucao Python: %s\n", status == 0 ? "SUCESSO (codigo 0)" : "FALHA");
 
     liberar_ast(prog);
