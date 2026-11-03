@@ -119,7 +119,7 @@ static void gerar_expressao(const No *raiz, FILE *saida) {
     }
 
     /* Ponto de Integracao (Israel/Bison): operacao binaria com parentizacao seletiva */
-    if (raiz->contador_filhos >= 2 && 
+    if (raiz->contador_filhos >= 2 &&
         strcmp(raiz->tipo, "atribuicao") != 0 && strcmp(raiz->tipo, "ATRIBUICAO") != 0 && strcmp(raiz->tipo, "=") != 0 &&
         strcmp(raiz->tipo, "decl_var") != 0 && strcmp(raiz->tipo, "DECL_VAR") != 0) {
         const char *op = raiz->valor ? raiz->valor : raiz->tipo;
@@ -141,7 +141,7 @@ static void gerar_codigo_nivel(const No *raiz, FILE *saida, int nivel) {
     if (!saida) saida = stdout;
 
     /* Ponto de Integracao (Israel/Bison): sequencia de comandos ou bloco */
-    if (strcmp(raiz->tipo, "programa") == 0 || strcmp(raiz->tipo, "bloco") == 0 || 
+    if (strcmp(raiz->tipo, "programa") == 0 || strcmp(raiz->tipo, "bloco") == 0 ||
         strcmp(raiz->tipo, "lista_statements") == 0) {
         if (strcmp(raiz->tipo, "bloco") == 0 && raiz->contador_filhos == 0) {
             emitir_indentacao(saida, nivel);
@@ -154,9 +154,39 @@ static void gerar_codigo_nivel(const No *raiz, FILE *saida, int nivel) {
         return;
     }
 
+    /* Ponto de Integracao: declaracao de funcao */
+    if (strcmp(raiz->tipo, "function") == 0 && raiz->contador_filhos >= 2) {
+        emitir_indentacao(saida, nivel);
+        fprintf(saida, "def %s(", raiz->valor ? raiz->valor : "funcao");
+        No *params = raiz->filhos[0];
+        if (params) {
+            for (int i = 0; i < params->contador_filhos; i++) {
+                if (i > 0) fputs(", ", saida);
+                if (params->filhos[i]->valor) {
+                    fputs(params->filhos[i]->valor, saida);
+                }
+            }
+        }
+        fputs("):\n", saida);
+        emitir_corpo(raiz->filhos[1], saida, nivel);
+        return;
+    }
+
+    /* Ponto de Integracao: comando return */
+    if (strcmp(raiz->tipo, "return") == 0) {
+        emitir_indentacao(saida, nivel);
+        fputs("return", saida);
+        if (raiz->contador_filhos > 0 && raiz->filhos[0]) {
+            fputs(" ", saida);
+            gerar_expressao(raiz->filhos[0], saida);
+        }
+        fputs("\n", saida);
+        return;
+    }
+
     /* Ponto de Integracao (Israel/Bison): declaracao e atribuicao (unificadas em Python) */
-    if (strcmp(raiz->tipo, "decl_var") == 0 || strcmp(raiz->tipo, "let") == 0 || 
-        strcmp(raiz->tipo, "const") == 0 || strcmp(raiz->tipo, "var") == 0 || 
+    if (strcmp(raiz->tipo, "decl_var") == 0 || strcmp(raiz->tipo, "let") == 0 ||
+        strcmp(raiz->tipo, "const") == 0 || strcmp(raiz->tipo, "var") == 0 ||
         strcmp(raiz->tipo, "atribuicao") == 0 || strcmp(raiz->tipo, "=") == 0) {
         emitir_indentacao(saida, nivel);
         const char *op = (raiz->valor && strcmp(raiz->valor, "") != 0) ? raiz->valor : "=";
@@ -211,7 +241,7 @@ static void gerar_codigo_nivel(const No *raiz, FILE *saida, int nivel) {
 
     /* Ponto de Integracao (Israel/Bison): for traduzido para while com incremento */
     if (strcmp(raiz->tipo, "for") == 0 && raiz->contador_filhos >= 4) {
-        if (raiz->filhos[0]) {
+        if (raiz->filhos[0] && strcmp(raiz->filhos[0]->tipo, "vazio") != 0) {
             gerar_codigo_nivel(raiz->filhos[0], saida, nivel);
         }
         emitir_indentacao(saida, nivel);
