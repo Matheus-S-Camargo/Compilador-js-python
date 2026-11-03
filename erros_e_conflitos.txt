@@ -1,0 +1,74 @@
+================================================================================
+RELATORIO DE ERROS, CONFLITOS E DISCREPANCIAS DO PROJETO (COMPILADOR JS -> PY)
+Data: 19/10/2026
+================================================================================
+
+1. CONFLITO GIT (RESOLVIDO)
+--------------------------------------------------------------------------------
+- Situacao: Resolvido. A quebra de linha no .gitignore foi corrigida, o arquivo
+  foi adicionado ao stage e o commit de merge foi concluido com sucesso.
+
+
+
+2. ERRO CRITICO ENTRE LEXICO E SINTATICO (FLEX <-> BISON)
+--------------------------------------------------------------------------------
+- Arquivo: src/lexico.l (linhas 60-63)
+  As regras dos tokens com valor lexico estao apenas retornando o tipo do token:
+    [a-zA-Z_][a-zA-Z0-9_]* { return IDENTIFICADOR; }
+    [0-9]+                  { return NUMERO; }
+    '[^']*'                 { return STRING; }
+    \"[^\"]*\"              { return STRING; }
+  Nao ha atribuicao do texto reconhecido para a variavel semantica (yylval).
+- Arquivo: src/grammar.y
+  Nao ha definicao de %union nem diretivas %type para associar tipo de dado
+  (como 'char *sval') aos tokens IDENTIFICADOR, NUMERO e STRING.
+- Consequencia: Quando as acoes semanticas do Bison forem ligadas a AST, $1 sera
+  indefinido/lixo de memoria, impedindo que o compilador saiba o nome da variavel
+  ou o valor do numero.
+
+
+3. DESCONEXAO ENTRE GRAMATICA E AST
+--------------------------------------------------------------------------------
+- Arquivo: src/grammar.y
+  A variavel global "No *raiz" esta declarada no topo do arquivo, mas nenhuma
+  regra sintatica cria nos ou faz a atribuicao "raiz = $$;".
+- Arquivo: src/main.c (linha 12)
+  Chama "imprimir_ast(raiz, 0);", mas como raiz permanece NULL, nada e impresso.
+- Arquivo: src/ast.c
+  A estrutura de dados da AST (struct No, novo_ponteiro, adicionar_filho,
+  liberar_ast) esta completa e funcional em C, porem desconectada do parser.
+
+
+4. INCONSISTENCIAS DE NOMENCLATURA E CONTRATOS (DOCS VS CODIGO)
+--------------------------------------------------------------------------------
+- Divergencia de funcoes da AST:
+  - Documentos antigos citam: novo_no, add_filho, n_filhos.
+  - Codigo real (src/ast.h): novo_ponteiro, adicionar_filho, contador_filhos.
+- Convencao de tipos de nos:
+  - Em docs/explicacao_AST.md exemplifica: "num", "binop".
+  - Em src/grammar.y os tokens sao: NUMERO, IDENTIFICADOR.
+  E necessario padronizar se a AST contera "num" ou "NUMERO", "id" ou "IDENTIFICADOR".
+
+
+5. AMBIENTE DE BUILD (WINDOWS / MAKEFILE)
+--------------------------------------------------------------------------------
+- Ferramentas ausentes no PATH:
+  O Makefile chama diretamente os comandos 'flex' e 'bison'. No ambiente Windows
+  atual, nenhum dos dois executaveis esta no PATH do terminal.
+- Arquivos C deletados:
+  Os arquivos C pre-compilados pelo Flex e Bison (grammar.tab.c, grammar.tab.h,
+  lex.yy.c) foram removidos de src/, impedindo compilar o projeto geral apenas
+  com GCC sem ter flex/bison instalados.
+- Testes isolados fora do Makefile:
+  O Makefile nao possui targets para compilar os testes modulares que dispensam
+  Bison (como tests/teste_tabela.c e tests/teste_gerador.c).
+
+
+6. MODULOS PENDENTES DE IMPLEMENTACAO / INTEGRACAO
+--------------------------------------------------------------------------------
+- src/gerador.h e src/gerador.c:
+  Ainda nao existem no repositorio (modulo de traducao para Python).
+- src/tabela.c e src/tabela.h:
+  Modulo pronto e funcional para controle de escopo e simbolos, porem ainda nao
+  e chamado pela gramatica nem pela AST.
+================================================================================

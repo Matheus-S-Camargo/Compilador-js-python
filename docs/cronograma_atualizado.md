@@ -189,12 +189,12 @@ O cronograma original distribuiu tarefas para cinco pessoas e antecipou a implem
 - [ ] Relatar número de aprovados/reprovados **sem maquiar falhas** e documentar as verificações semânticas realmente implementadas.
 - [ ] Rodar a bateria após cada integração na `main`.
 
-**Ruan — correções finais do gerador**
+**Juan / Ruan — correções finais do gerador**
 
-- [ ] Corrigir diferenças de saída, erros de indentação, ordem dos comandos e traduções ainda incorretas.
-- [ ] Revisar `for`, funções e operadores **somente se tiverem entrado no escopo implementado**.
-- [ ] Ajudar Jorge a identificar casos de comparação JS/Python que sejam válidos para o subconjunto escolhido.
-- [ ] Não abrir novas frentes como objetos avançados ou otimizações.
+- [x] Corrigir diferenças de saída, erros de indentação, ordem dos comandos e traduções ainda incorretas (Issue #29: precedência de operadores corrigida).
+- [x] Revisar `for`, funções e operadores **somente se tiverem entrado no escopo implementado** (nós `function` e `return` implementados e validados).
+- [x] Ajudar Jorge a identificar casos de comparação JS/Python que sejam válidos para o subconjunto escolhido (validação de `01_variaveis.js`, `02_if_else.js`, `03_while.js`).
+- [x] Não abrir novas frentes como objetos avançados ou otimizações (escopo estritamente contido em `src/gerador.c`).
 
 **Datas de fechamento:**
 

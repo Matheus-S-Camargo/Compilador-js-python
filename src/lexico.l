@@ -2,6 +2,8 @@
 %option noyywrap
 %{
     #include <stdio.h>
+    #include <string.h>
+    #include "ast.h"
     #include "grammar.tab.h"
 %}
 
@@ -57,12 +59,15 @@
 "null" { return VAZIO; }
 "while" { return WHILE; }
 
-[a-zA-Z_][a-zA-Z0-9_]* { yylval.str =strdup(yytext); return IDENTIFICADOR; }
-[0-9]+ { yylval.str =strdup(yytext); return NUMERO; } 
-'[^']*' { yylval.str =strdup(yytext); return STRING; }
-\"[^\"]*\" { yylval.str =strdup(yytext); return STRING; }
-[ \t\r\n]+ { /* ignora espaços */ }
-. { printf("Erro léxico: caractere desconhecido: '%s'\n", yytext); }
+[a-zA-Z_][a-zA-Z0-9_]* { yylval.str = strdup(yytext); return IDENTIFICADOR; }
+[0-9]+                  { yylval.str = strdup(yytext); return NUMERO; }
+'[^']*'                 { yylval.str = strdup(yytext); return STRING; }
+\"[^\"]*\"              { yylval.str = strdup(yytext); return STRING; }
+[ \t\r\n]+              { /* ignora espaços */ }
+.                       {
+    fprintf(stderr, "Erro lexico: caractere desconhecido: '%s'\n", yytext);
+    return (unsigned char) yytext[0];
+}
 
 
 %%
