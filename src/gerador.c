@@ -141,16 +141,31 @@ static void gerar_codigo_nivel(const No *raiz, FILE *saida, int nivel) {
     if (!saida) saida = stdout;
 
     /* Ponto de Integracao (Israel/Bison): sequencia de comandos ou bloco */
-    if (strcmp(raiz->tipo, "programa") == 0 || strcmp(raiz->tipo, "bloco") == 0 ||
+        if (strcmp(raiz->tipo, "programa") == 0 || strcmp(raiz->tipo, "bloco") == 0 ||
         strcmp(raiz->tipo, "lista_statements") == 0) {
         if (strcmp(raiz->tipo, "bloco") == 0 && raiz->contador_filhos == 0) {
             emitir_indentacao(saida, nivel);
             fputs("pass\n", saida);
             return;
         }
+
         for (int i = 0; i < raiz->contador_filhos; i++) {
-            gerar_codigo_nivel(raiz->filhos[i], saida, nivel);
+            const No *filho = raiz->filhos[i];
+
+            if (filho && filho->tipo && strcmp(filho->tipo, "function") == 0) {
+                gerar_codigo_nivel(filho, saida, nivel);
+            }
         }
+
+        for (int i = 0; i < raiz->contador_filhos; i++) {
+            const No *filho = raiz->filhos[i];
+
+            if (filho && filho->tipo &&
+                strcmp(filho->tipo, "function") != 0) {
+                gerar_codigo_nivel(filho, saida, nivel);
+            }
+        }
+
         return;
     }
 
