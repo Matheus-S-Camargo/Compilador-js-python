@@ -5,6 +5,48 @@
 static void gerar_codigo_nivel(const No *raiz, FILE *saida, int nivel);
 static void gerar_expressao(const No *raiz, FILE *saida);
 
+static int precedencia(const char *op) {
+    if (!op) return 0;
+    if (strcmp(op, "||") == 0 || strcmp(op, "or") == 0) return 1;
+    if (strcmp(op, "&&") == 0 || strcmp(op, "and") == 0) return 2;
+    if (strcmp(op, "==") == 0 || strcmp(op, "!=") == 0 ||
+        strcmp(op, "===") == 0 || strcmp(op, "!==") == 0 ||
+        strcmp(op, "<") == 0 || strcmp(op, "<=") == 0 ||
+        strcmp(op, ">") == 0 || strcmp(op, ">=") == 0) return 3;
+    if (strcmp(op, "+") == 0 || strcmp(op, "-") == 0) return 4;
+    if (strcmp(op, "*") == 0 || strcmp(op, "/") == 0 || strcmp(op, "%") == 0) return 5;
+    return 0;
+}
+
+static int precedencia_no(const No *no) {
+    if (!no) return 0;
+    if (no->tipo && (strcmp(no->tipo, "unop") == 0 || strcmp(no->tipo, "UNOP") == 0)) {
+        return 0;
+    }
+    const char *op = no->valor ? no->valor : no->tipo;
+    return precedencia(op);
+}
+
+static void emitir_operando(const No *filho, int p_pai, int lado_dir, const char *op_pai, FILE *saida) {
+    if (!filho) return;
+    int p_filho = precedencia_no(filho);
+    int paren = 0;
+    if (p_filho > 0 && p_pai > 0) {
+        if (p_filho < p_pai) {
+            paren = 1;
+        } else if (p_filho == p_pai) {
+            if (p_pai == 3) {
+                paren = 1;
+            } else if (lado_dir && op_pai && (op_pai[0] == '-' || op_pai[0] == '/' || op_pai[0] == '%')) {
+                paren = 1;
+            }
+        }
+    }
+    if (paren) fputs("(", saida);
+    gerar_expressao(filho, saida);
+    if (paren) fputs(")", saida);
+}
+
 static void emitir_indentacao(FILE *saida, int nivel) {
     for (int i = 0; i < nivel; i++) {
         fputs("    ", saida);
@@ -19,38 +61,6 @@ static const char *converter_operador(const char *op) {
     if (strcmp(op, "!==") == 0) return "!=";
     if (strcmp(op, "!") == 0) return "not ";
     return op;
-}
-
-static int precedencia_op(const char *op) {
-    if (!op) return 0;
-    if (strcmp(op, "||") == 0) return 1;
-    if (strcmp(op, "&&") == 0) return 2;
-    if (strcmp(op, "==") == 0 || strcmp(op, "!=") == 0 ||
-        strcmp(op, "===") == 0 || strcmp(op, "!==") == 0) return 3;
-    if (strcmp(op, "<") == 0 || strcmp(op, "<=") == 0 ||
-        strcmp(op, ">") == 0 || strcmp(op, ">=") == 0) return 4;
-    if (strcmp(op, "+") == 0 || strcmp(op, "-") == 0) return 5;
-    if (strcmp(op, "*") == 0 || strcmp(op, "/") == 0 || strcmp(op, "%") == 0) return 6;
-    return 0;
-}
-
-static void gerar_subexpressao(const No *filho, const No *pai, int eh_direita, FILE *saida) {
-    if (!filho) return;
-    int prec_pai = precedencia_op(pai->valor ? pai->valor : pai->tipo);
-    int prec_filho = (strcmp(filho->tipo, "binop") == 0) ? precedencia_op(filho->valor ? filho->valor : filho->tipo) : 0;
-    int precisa_paren = 0;
-    if (prec_filho > 0) {
-        if (prec_filho < prec_pai) {
-            precisa_paren = 1;
-        } else if (prec_filho == prec_pai && eh_direita) {
-            if (pai->valor && (strcmp(pai->valor, "-") == 0 || strcmp(pai->valor, "/") == 0 || strcmp(pai->valor, "%") == 0)) {
-                precisa_paren = 1;
-            }
-        }
-    }
-    if (precisa_paren) fputs("(", saida);
-    gerar_expressao(filho, saida);
-    if (precisa_paren) fputs(")", saida);
 }
 
 static void emitir_corpo(const No *corpo, FILE *saida, int nivel) {
@@ -98,17 +108,25 @@ static void gerar_expressao(const No *raiz, FILE *saida) {
         if (raiz->valor && strcmp(raiz->valor, "++") != 0 && strcmp(raiz->valor, "--") != 0) {
             fputs(converter_operador(raiz->valor), saida);
         }
-        if (raiz->contador_filhos > 0) {
+        if (raiz->contador_filhos > 0 && raiz->filhos[0]) {
+            int precisa_paren = (raiz->valor && (strcmp(raiz->valor, "!") == 0 || strcmp(raiz->valor, "-") == 0) &&
+                                 precedencia_no(raiz->filhos[0]) > 0);
+            if (precisa_paren) fputs("(", saida);
             gerar_expressao(raiz->filhos[0], saida);
+            if (precisa_paren) fputs(")", saida);
         }
         return;
     }
 
-    /* Ponto de Integracao (Israel/Bison): operacao binaria */
-    if (raiz->contador_filhos >= 2 && strcmp(raiz->tipo, "atribuicao") != 0 && strcmp(raiz->tipo, "=") != 0) {
-        gerar_subexpressao(raiz->filhos[0], raiz, 0, saida);
-        fprintf(saida, " %s ", converter_operador(raiz->valor ? raiz->valor : raiz->tipo));
-        gerar_subexpressao(raiz->filhos[1], raiz, 1, saida);
+    /* Ponto de Integracao (Israel/Bison): operacao binaria com parentizacao seletiva */
+    if (raiz->contador_filhos >= 2 &&
+        strcmp(raiz->tipo, "atribuicao") != 0 && strcmp(raiz->tipo, "ATRIBUICAO") != 0 && strcmp(raiz->tipo, "=") != 0 &&
+        strcmp(raiz->tipo, "decl_var") != 0 && strcmp(raiz->tipo, "DECL_VAR") != 0) {
+        const char *op = raiz->valor ? raiz->valor : raiz->tipo;
+        int p = precedencia(op);
+        emitir_operando(raiz->filhos[0], p, 0, op, saida);
+        fprintf(saida, " %s ", converter_operador(op));
+        emitir_operando(raiz->filhos[1], p, 1, op, saida);
         return;
     }
 
@@ -123,7 +141,7 @@ static void gerar_codigo_nivel(const No *raiz, FILE *saida, int nivel) {
     if (!saida) saida = stdout;
 
     /* Ponto de Integracao (Israel/Bison): sequencia de comandos ou bloco */
-    if (strcmp(raiz->tipo, "programa") == 0 || strcmp(raiz->tipo, "bloco") == 0 || 
+    if (strcmp(raiz->tipo, "programa") == 0 || strcmp(raiz->tipo, "bloco") == 0 ||
         strcmp(raiz->tipo, "lista_statements") == 0) {
         if (strcmp(raiz->tipo, "bloco") == 0 && raiz->contador_filhos == 0) {
             emitir_indentacao(saida, nivel);
@@ -167,8 +185,8 @@ static void gerar_codigo_nivel(const No *raiz, FILE *saida, int nivel) {
     }
 
     /* Ponto de Integracao (Israel/Bison): declaracao e atribuicao (unificadas em Python) */
-    if (strcmp(raiz->tipo, "decl_var") == 0 || strcmp(raiz->tipo, "let") == 0 || 
-        strcmp(raiz->tipo, "const") == 0 || strcmp(raiz->tipo, "var") == 0 || 
+    if (strcmp(raiz->tipo, "decl_var") == 0 || strcmp(raiz->tipo, "let") == 0 ||
+        strcmp(raiz->tipo, "const") == 0 || strcmp(raiz->tipo, "var") == 0 ||
         strcmp(raiz->tipo, "atribuicao") == 0 || strcmp(raiz->tipo, "=") == 0) {
         emitir_indentacao(saida, nivel);
         const char *op = (raiz->valor && strcmp(raiz->valor, "") != 0) ? raiz->valor : "=";
@@ -233,6 +251,35 @@ static void gerar_codigo_nivel(const No *raiz, FILE *saida, int nivel) {
 
         if (raiz->filhos[3]) gerar_codigo_nivel(raiz->filhos[3], saida, nivel + 1);
         if (raiz->filhos[2]) gerar_codigo_nivel(raiz->filhos[2], saida, nivel + 1);
+        return;
+    }
+
+    /* Ponto de Integracao (Israel/Bison): retorno de funcao */
+    if (strcmp(raiz->tipo, "return") == 0 || strcmp(raiz->tipo, "RETURN") == 0) {
+        emitir_indentacao(saida, nivel);
+        fputs("return", saida);
+        if (raiz->contador_filhos > 0 && raiz->filhos[0]) {
+            fputs(" ", saida);
+            gerar_expressao(raiz->filhos[0], saida);
+        }
+        fputs("\n", saida);
+        return;
+    }
+
+    /* Ponto de Integracao (Israel/Bison): declaracao de funcao */
+    if (strcmp(raiz->tipo, "function") == 0 || strcmp(raiz->tipo, "FUNCTION") == 0) {
+        emitir_indentacao(saida, nivel);
+        fprintf(saida, "def %s(", raiz->valor ? raiz->valor : "funcao");
+        if (raiz->contador_filhos > 0 && raiz->filhos[0]) {
+            const No *params = raiz->filhos[0];
+            for (int i = 0; i < params->contador_filhos; i++) {
+                if (i > 0) fputs(", ", saida);
+                const No *p = params->filhos[i];
+                fputs(p->valor ? p->valor : (p->tipo ? p->tipo : "param"), saida);
+            }
+        }
+        fputs("):\n", saida);
+        emitir_corpo(raiz->contador_filhos > 1 ? raiz->filhos[1] : NULL, saida, nivel);
         return;
     }
 

@@ -37,7 +37,7 @@ const PROJECT_DATA = {
         ]
       },
       {
-        "name": "Ruan",
+        "name": "Juan",
         "role": "Gerador de Código Python (Comandos & Expressões)",
         "files": [
           "src/gerador.c",
@@ -327,9 +327,9 @@ const PROJECT_DATA = {
       "path": "src/gerador.c",
       "language": "c",
       "module": "gerador",
-      "author": "Ruan & Lucas",
-      "summary": "Motor de tradução da AST para Python: emite indentação de 4 espaços, traduz operadores (=== -> ==, && -> and, console.log -> print) e converte laços for em while.",
-      "linesCount": 185,
+      "author": "Juan (Ruan) & Lucas",
+      "summary": "Motor de tradução da AST para Python: emite indentação de 4 espaços, preserva precedência com parentização seletiva ((a+b)*2-1 -> 25), suporta funções (def/return), laços for/while e chamadas print().",
+      "linesCount": 264,
       "dependencies": [
         "src/gerador.h",
         "src/ast.h",
@@ -346,6 +346,49 @@ const PROJECT_DATA = {
         "#include \"gerador.h\"",
         "",
         "static void gerar_codigo_nivel(const No *raiz, FILE *saida, int nivel);",
+        "static void gerar_expressao(const No *raiz, FILE *saida);",
+        "",
+        "static int precedencia(const char *op) {",
+        "    if (!op) return 0;",
+        "    if (strcmp(op, \"||\") == 0 || strcmp(op, \"or\") == 0) return 1;",
+        "    if (strcmp(op, \"&&\") == 0 || strcmp(op, \"and\") == 0) return 2;",
+        "    if (strcmp(op, \"==\") == 0 || strcmp(op, \"!=\") == 0 ||",
+        "        strcmp(op, \"===\") == 0 || strcmp(op, \"!==\") == 0 ||",
+        "        strcmp(op, \"<\") == 0 || strcmp(op, \"<=\") == 0 ||",
+        "        strcmp(op, \">\") == 0 || strcmp(op, \">=\") == 0) return 3;",
+        "    if (strcmp(op, \"+\") == 0 || strcmp(op, \"-\") == 0) return 4;",
+        "    if (strcmp(op, \"*\") == 0 || strcmp(op, \"/\") == 0 || strcmp(op, \"%\") == 0) return 5;",
+        "    return 0;",
+        "}",
+        "",
+        "static int precedencia_no(const No *no) {",
+        "    if (!no) return 0;",
+        "    if (no->tipo && (strcmp(no->tipo, \"unop\") == 0 || strcmp(no->tipo, \"UNOP\") == 0)) {",
+        "        return 0;",
+        "    }",
+        "    const char *op = no->valor ? no->valor : no->tipo;",
+        "    return precedencia(op);",
+        "}",
+        "",
+        "static void emitir_operando(const No *filho, int p_pai, int lado_dir, const char *op_pai, FILE *saida) {",
+        "    if (!filho) return;",
+        "    int p_filho = precedencia_no(filho);",
+        "    int paren = 0;",
+        "    if (p_filho > 0 && p_pai > 0) {",
+        "        if (p_filho < p_pai) {",
+        "            paren = 1;",
+        "        } else if (p_filho == p_pai) {",
+        "            if (p_pai == 3) {",
+        "                paren = 1;",
+        "            } else if (lado_dir && op_pai && (op_pai[0] == '-' || op_pai[0] == '/' || op_pai[0] == '%')) {",
+        "                paren = 1;",
+        "            }",
+        "        }",
+        "    }",
+        "    if (paren) fputs(\"(\", saida);",
+        "    gerar_expressao(filho, saida);",
+        "    if (paren) fputs(\")\", saida);",
+        "}",
         "",
         "static void emitir_indentacao(FILE *saida, int nivel) {",
         "    for (int i = 0; i < nivel; i++) {",
@@ -408,17 +451,25 @@ const PROJECT_DATA = {
         "        if (raiz->valor && strcmp(raiz->valor, \"++\") != 0 && strcmp(raiz->valor, \"--\") != 0) {",
         "            fputs(converter_operador(raiz->valor), saida);",
         "        }",
-        "        if (raiz->contador_filhos > 0) {",
+        "        if (raiz->contador_filhos > 0 && raiz->filhos[0]) {",
+        "            int precisa_paren = (raiz->valor && (strcmp(raiz->valor, \"!\") == 0 || strcmp(raiz->valor, \"-\") == 0) &&",
+        "                                 precedencia_no(raiz->filhos[0]) > 0);",
+        "            if (precisa_paren) fputs(\"(\", saida);",
         "            gerar_expressao(raiz->filhos[0], saida);",
+        "            if (precisa_paren) fputs(\")\", saida);",
         "        }",
         "        return;",
         "    }",
         "",
-        "    /* Ponto de Integracao (Israel/Bison): operacao binaria */",
-        "    if (raiz->contador_filhos >= 2 && strcmp(raiz->tipo, \"atribuicao\") != 0 && strcmp(raiz->tipo, \"=\") != 0) {",
-        "        gerar_expressao(raiz->filhos[0], saida);",
-        "        fprintf(saida, \" %s \", converter_operador(raiz->valor ? raiz->valor : raiz->tipo));",
-        "        gerar_expressao(raiz->filhos[1], saida);",
+        "    /* Ponto de Integracao (Israel/Bison): operacao binaria com parentizacao seletiva */",
+        "    if (raiz->contador_filhos >= 2 && ",
+        "        strcmp(raiz->tipo, \"atribuicao\") != 0 && strcmp(raiz->tipo, \"ATRIBUICAO\") != 0 && strcmp(raiz->tipo, \"=\") != 0 &&",
+        "        strcmp(raiz->tipo, \"decl_var\") != 0 && strcmp(raiz->tipo, \"DECL_VAR\") != 0) {",
+        "        const char *op = raiz->valor ? raiz->valor : raiz->tipo;",
+        "        int p = precedencia(op);",
+        "        emitir_operando(raiz->filhos[0], p, 0, op, saida);",
+        "        fprintf(saida, \" %s \", converter_operador(op));",
+        "        emitir_operando(raiz->filhos[1], p, 1, op, saida);",
         "        return;",
         "    }",
         "",
@@ -516,6 +567,35 @@ const PROJECT_DATA = {
         "        return;",
         "    }",
         "",
+        "    /* Ponto de Integracao (Israel/Bison): retorno de funcao */",
+        "    if (strcmp(raiz->tipo, \"return\") == 0 || strcmp(raiz->tipo, \"RETURN\") == 0) {",
+        "        emitir_indentacao(saida, nivel);",
+        "        fputs(\"return\", saida);",
+        "        if (raiz->contador_filhos > 0 && raiz->filhos[0]) {",
+        "            fputs(\" \", saida);",
+        "            gerar_expressao(raiz->filhos[0], saida);",
+        "        }",
+        "        fputs(\"\\n\", saida);",
+        "        return;",
+        "    }",
+        "",
+        "    /* Ponto de Integracao (Israel/Bison): declaracao de funcao */",
+        "    if (strcmp(raiz->tipo, \"function\") == 0 || strcmp(raiz->tipo, \"FUNCTION\") == 0) {",
+        "        emitir_indentacao(saida, nivel);",
+        "        fprintf(saida, \"def %s(\", raiz->valor ? raiz->valor : \"funcao\");",
+        "        if (raiz->contador_filhos > 0 && raiz->filhos[0]) {",
+        "            const No *params = raiz->filhos[0];",
+        "            for (int i = 0; i < params->contador_filhos; i++) {",
+        "                if (i > 0) fputs(\", \", saida);",
+        "                const No *p = params->filhos[i];",
+        "                fputs(p->valor ? p->valor : (p->tipo ? p->tipo : \"param\"), saida);",
+        "            }",
+        "        }",
+        "        fputs(\"):\\n\", saida);",
+        "        emitir_corpo(raiz->contador_filhos > 1 ? raiz->filhos[1] : NULL, saida, nivel);",
+        "        return;",
+        "    }",
+        "",
         "    /* Ponto de Integracao (Israel/Bison): chamada ou expressao solta como comando */",
         "    emitir_indentacao(saida, nivel);",
         "    gerar_expressao((raiz->contador_filhos > 0 && strcmp(raiz->tipo, \"chamada\") != 0) ? raiz->filhos[0] : raiz, saida);",
@@ -524,40 +604,64 @@ const PROJECT_DATA = {
         "",
         "void gerar_codigo(const No *raiz, FILE *saida) {",
         "    gerar_codigo_nivel(raiz, saida, 0);",
-        "}",
-        ""
+        "}"
       ],
       "annotations": {
-        "5": {
+        "3": {
           "title": "Inclusão do Contrato: gerador.h",
           "text": "Importa a assinatura de gerar_codigo(const No *raiz, FILE *saida), conectando a síntese ao Bison e ao main.",
           "theory": "Fase de backend e geração de código de destino.",
           "linkFile": "src/gerador.h"
         },
-        "7": {
+        "8": {
+          "title": "precedencia(): Mapeamento dos Níveis Sintáticos",
+          "text": "Classifica operadores em 5 níveis hierárquicos: or -> and -> relacional -> aditivo -> multiplicativo.",
+          "theory": "Álgebra booleana e aritmética: preservação da semântica original da AST na emissão textual."
+        },
+        "30": {
+          "title": "emitir_operando(): Parentização Seletiva",
+          "text": "Insere parênteses somente se P_filho < P_pai ou no lado direito de operadores não associativos (-, /, %).",
+          "theory": "Elimina ambiguidade sintática no interpretador de destino sem gerar parênteses redundantes."
+        },
+        "50": {
           "title": "emitir_indentacao(): Gerador de Escopo Python",
           "text": "Emite exatamente 4 espaços por nível de profundidade na árvore.",
           "theory": "Off-side rule: Python delimita blocos estritamente por indentação contígua."
         },
-        "13": {
+        "56": {
           "title": "converter_operador(): Mapeamento Semântico",
           "text": "Mapeia && -> and, || -> or, === -> ==, !== -> != e ! -> not.",
           "theory": "Adequação entre léxico de C/JS e palavras-chave reservadas do Python."
         },
-        "23": {
+        "66": {
           "title": "emitir_corpo(): Tratamento de Blocos Vazios",
           "text": "Se o bloco JS estiver vazio ({}), injeta pass no Python.",
           "theory": "Evita SyntaxError no interpretador Python em blocos sem comandos."
         },
-        "51": {
+        "93": {
           "title": "console.log -> print()",
           "text": "Reconhece chamada de log e traduz para print Python.",
           "theory": "Mapeamento de runtime: JS usa método de console; Python usa built-in print."
         },
-        "161": {
+        "121": {
+          "title": "Operação Binária com Precedência",
+          "text": "Percorre subárvores esquerda e direita emitindo parênteses protetores quando necessário.",
+          "theory": "Garante que (a + b) * 2 resulte em 25 e não 15 ao ser interpretado em Python (Issue #29)."
+        },
+        "212": {
           "title": "Desdobramento de for em while",
           "text": "Translada for (init; cond; inc) para init + while cond: corpo + inc.",
           "theory": "Python não possui for clássico de 3 cláusulas no estilo C/JS."
+        },
+        "227": {
+          "title": "Comando return",
+          "text": "Emite a instrução return acompanhada da expressão retornada ou vazia.",
+          "theory": "Fluxo de controle de saída de sub-rotinas em Python."
+        },
+        "239": {
+          "title": "Declaração de Função (def)",
+          "text": "Traduz function nome(param1, param2) { ... } para def nome(param1, param2): com indentação de escopo.",
+          "theory": "Sintaxe de definição de funções e passagem de parâmetros posicionais em Python."
         }
       }
     },
@@ -1518,7 +1622,7 @@ const PROJECT_DATA = {
       "title": "5. Desafios de Tradução: JavaScript → Python",
       "sourceDoc": "estrutura_documento_inicial.md & gerador.c",
       "desc": "Tradução de chaves para indentação, booleanos, laço for para while e mapeamento da biblioteca padrão.",
-      "content": "### Desafios Arquiteturais de Transpilação\n\nUm compilador fonte-a-fonte de JS para Python enfrenta divergências fundamentais de paradigma sintático:\n\n1. **Off-side Rule (Indentação Obrigatória):** JavaScript ignora quebras de linha e usa `{}`. O gerador em C calcula um contador `nivel` e emite exatamente `nivel * 4` espaços antes de cada instrução.\n2. **Blocos Vazios em Python:** Em JS, `if (x) {}` é válido. Em Python, `if x:` sem corpo gera erro de sintaxe. O gerador detecta nós vazios e injeta automaticamente a instrução `pass`.\n3. **Desdobramento de `for` Clássico:**\n   * JS: `for (let i = 0; i < 5; i++) { ... }`\n   * Python não possui laço for com cláusula de inicialização, teste e passo estilo C.\n   * **Solução no Gerador:** Desdobra a inicialização antes do laço, converte para `while i < 5:` e injeta `i += 1` ao final de cada iteração.\n4. **Mapeamento de Console:** `console.log(a, b)` é reconhecido como nó do tipo `chamada` e traduzido diretamente para a função embutida `print(a, b)`."
+      "content": "### Desafios Arquiteturais de Transpilação\n\nUm compilador fonte-a-fonte de JS para Python enfrenta divergências fundamentais de paradigma sintático:\n\n1. **Off-side Rule (Indentação Obrigatória):** JavaScript ignora quebras de linha e usa `{}`. O gerador em C calcula um contador `nivel` e emite exatamente `nivel * 4` espaços antes de cada instrução.\n2. **Blocos Vazios em Python:** Em JS, `if (x) {}` é válido. Em Python, `if x:` sem corpo gera erro de sintaxe. O gerador detecta nós vazios e injeta automaticamente a instrução `pass`.\n3. **Desdobramento de `for` Clássico:**\n   * JS: `for (let i = 0; i < 5; i++) { ... }`\n   * Python não possui laço for com cláusula de inicialização, teste e passo estilo C.\n   * **Solução no Gerador:** Desdobra a inicialização antes do laço, converte para `while i < 5:` e injeta `i += 1` ao final de cada iteração.\n4. **Mapeamento de Console:** `console.log(a, b)` é reconhecido como nó do tipo `chamada` e traduzido diretamente para a função embutida `print(a, b)`.\\n5. **Parentização Seletiva e Precedência de Operadores (Issue #29):**\\n   * Em JS, `(a + b) * 2 - 1` tem parênteses consumidos pelo Bison na AST.\\n   * **Solução no Gerador:** Implementação de cálculo de precedência ($P_{filho} < P_{pai}$ ou associatividade de `-`, `/`, `%`) emitindo parênteses protetores apenas quando indispensáveis (resultado 25 e não 15).\\n6. **Funções e Retorno (Sprint 9):**\\n   * `function nome(params) { corpo }` mapeado para `def nome(params):` com bloco indentado via `emitir_corpo()`.\\n   * `return <expr>` traduzido diretamente para `return <expr>`."
     }
   ]
 };
