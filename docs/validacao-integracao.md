@@ -1,39 +1,46 @@
 # Validação da integração
 
-## Resultado geral
+O foco desta revisão é o subconjunto básico do trabalho universitário: variáveis, expressões, condições, laços e funções.
 
-- Projeto compilado com todos os módulos integrados.
-- Opções `--ast` e `--py` verificadas no caso 01.
-- Separação entre saída normal e mensagens de erro verificada em casos válidos e inválidos.
-- As 17 verificações de `tests/rodar.sh` passaram após a correção.
-- Os cinco exemplos válidos foram executados em JavaScript e no Python gerado, com saídas iguais.
+Execute `make test`. São necessários GCC, Bison, Flex, Node.js e Python 3.8 ou superior. Para escolher outro comando Python, use `make test PYTHON=python3`.
 
-## Casos organizados
+## Resultado
 
-| Casos | Finalidade | Resultado |
-|---|---|---|
-| 01 | Variáveis e contas | Saídas iguais |
-| 02 | Condições | Saídas iguais |
-| 03 | Repetição com `while` | Saídas iguais |
-| 06 | Variáveis dentro de blocos | Saídas iguais |
-| 07 | Funções e repetições | Saídas iguais após correção |
-| 04, 05 e 08 a 14 | Verificar erros no uso de nomes e declarações | Verificações existentes passaram |
-| 15 a 17 | Verificar instruções malformadas | Verificações existentes passaram |
+A bateria reduzida terminou com 24 testes aprovados e nenhuma falha no ambiente Windows local: 15 arquivos em tests/casos e nove verificações específicas no executor. Não houve validação em Linux nesta revisão.
 
-## Correção realizada
+Para cada programa válido, o teste verifica a sintaxe do Python, executa JavaScript e Python, confere os códigos de saída e compara a saída completa. O modo texto normaliza quebras de linha, preservando espaços e linhas em branco. Nos casos inválidos, verifica o código de erro, as mensagens esperadas e a ausência de Python gerado. Cada execução tem limite de cinco segundos.
 
-O caso 07 revelou que o Python chamava uma função antes de sua definição, causando `NameError`.
+Antes das correções do gerador, a bateria anterior de 29 testes encontrou oito falhas. Depois das correções e da revisão das duplicações, os 24 testes restantes passaram.
 
-O gerador foi ajustado para escrever primeiro as definições das funções e depois as demais instruções de cada lista. Após a mudança, o caso produziu `0`, `1`, `2` e `7`, como o JavaScript original.
+## Cobertura e correções
 
-Todas as verificações existentes e as comparações dos cinco exemplos válidos foram repetidas com sucesso.
+| Parte | Verificação |
+|---|---|
+| Expressões | Precedência, associatividade, parênteses, negação, comparações e lógica |
+| Variáveis | Declaração, atribuição, operadores compostos e atribuição em expressão |
+| Valores | Impressão de booleanos, nulo, texto e resultados numéricos |
+| Operadores | Igualdade estrita, ternário, incremento e decremento antes e depois da variável |
+| Controle | Ramos alternativos, blocos vazios, while e for clássico, inclusive aninhado |
+| Funções | Parâmetros, chamada antecipada, recursão e return com e sem valor |
+| Erros | Casos existentes de nomes não declarados, redeclaração, escopos e sintaxe inválida |
 
-## Observações e limites
+O gerador usa diretamente os nós da AST integrada e coloca parênteses nas expressões. A AST agora distingue incremento e decremento prefixados dos pós-fixados. A comparação automática foi concentrada em `tests/rodar.py`, chamada pelo Makefile e pelo script shell, evitando duas implementações da suíte.
 
-- Permanecem dois avisos de funções não utilizadas no arquivo gerado pelo Flex.
-- Os resultados se referem aos exemplos existentes; não comprovam suporte a todas as possibilidades do JavaScript.
-- O caso 02 não cobre todos os caminhos alternativos das condições.
+## Revisão de utilidade dos testes
 
-## Continuidade na Sprint 9
+| Remoção ou ajuste | Motivo e cobertura mantida |
+|---|---|
+| Exemplo 01 de variáveis | Aritmética e atribuições já são verificadas pelos casos específicos; const e texto ficaram no teste de impressão. |
+| Exemplo 09 de função não declarada | Usa a mesma validação de nome-base exercitada pela chamada a membro de objeto não declarado no caso 13. |
+| Testes adicionais de ramos e funções simples | Blocos vazios e ramos alternativos foram concentrados no caso 02; while vazio no 03; return vazio no 07. |
+| Dois testes adicionais de for | As variantes foram reunidas em um teste; o caso 07 mantém a integração entre funções e laço. |
+| Programas manuais de lexer, AST, tabela e gerador | Apenas exibiam resultados. A suíte integrada verifica as saídas e os erros dessas etapas automaticamente. O executável de lexer e a saída Python gravada também foram removidos. |
+| Verificação isolada de sintaxe com compile | A execução do Python já rejeita erros sintáticos, evitando uma segunda compilação do mesmo programa. |
 
-Os casos estão separados entre programas válidos, erros semânticos e erros sintáticos. A comparação automática da execução de JavaScript e Python poderá complementar as verificações já presentes em `tests/rodar.sh`.
+Os testes de variáveis não declaradas e redeclaração continuam separados para dar diagnósticos específicos. O caso 12 mantém sua finalidade própria: comprovar que vários erros são reportados na mesma análise. Os testes de escopo de bloco, função e for foram mantidos porque envolvem entradas e saídas de escopos distintos. Os três erros sintáticos exercitam construções diferentes da gramática.
+
+## Limites
+
+A bateria cobre o básico implementado; não representa todos os comportamentos do JavaScript. Coerção entre tipos, diferenças de escopo entre var/let/const, undefined, alterações de variáveis externas em funções e o resto de divisão com números negativos permanecem fora da garantia desta revisão. Comparações de bytes exatos exigem testes próprios, sem normalização de quebras de linha.
+
+A compilação mantém os dois avisos de funções não utilizadas no código gerado pelo Flex. Nenhuma alteração foi enviada ao GitHub. A versão anterior dos arquivos está em `.backup-1.zip`, ignorada pelo Git.

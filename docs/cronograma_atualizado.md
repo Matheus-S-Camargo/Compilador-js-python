@@ -247,13 +247,13 @@ make clean && make
 
 ```bash
 # 1) Gerar Python a partir do JavaScript
-./build/compilador < tests/casos/01_variaveis.js > /tmp/saida.py
+./build/compilador < tests/casos/02_if_else.js > /tmp/saida.py
 
 # 2) Executar o Python gerado
 python3 /tmp/saida.py
 
 # 3) Comparar com a execução do JavaScript original
-node tests/casos/01_variaveis.js > /tmp/saida_js.txt
+node tests/casos/02_if_else.js > /tmp/saida_js.txt
 python3 /tmp/saida.py > /tmp/saida_py.txt
 diff -u /tmp/saida_js.txt /tmp/saida_py.txt
 ```

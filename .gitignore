@@ -19,3 +19,5 @@ __pycache__/
 *.exe
 *.o
 *.out
+
+/.backup-1.zip

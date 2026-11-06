@@ -303,8 +303,8 @@ expressao
     | SUBTRACAO expressao %prec NEGACAO  { $$ = criar_unop("-", $2); }
     | INCREMENTO expressao               { $$ = criar_unop("++", $2); }
     | DECREMENTO expressao               { $$ = criar_unop("--", $2); }
-    | expressao INCREMENTO               { $$ = criar_unop("++", $1); }
-    | expressao DECREMENTO               { $$ = criar_unop("--", $1); }
+    | expressao INCREMENTO               { $$ = criar_unop("post++", $1); }
+    | expressao DECREMENTO               { $$ = criar_unop("post--", $1); }
     | expressao PONTO IDENTIFICADOR {
         char buf[256];
         snprintf(buf, sizeof(buf), "%s.%s", $1->valor ? $1->valor : "obj", $3);

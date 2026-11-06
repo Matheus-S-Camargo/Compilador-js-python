@@ -1,18 +1,16 @@
-// Caso 02: if/else com comparacoes e operadores logicos
-let idade = 20;
-let ativo = true;
 let categoria = 0;
-
-if (idade >= 18 && ativo) {
+if (true) {
   categoria = 1;
 } else {
   categoria = 2;
 }
-
-if (idade < 10 || !ativo) {
-  console.log("crianca ou inativo");
-} else {
-  console.log("adulto ativo");
-}
-
 console.log(categoria);
+if (false) {
+  console.log("erro");
+} else if (false) {
+  console.log("erro");
+} else {
+  console.log("alternativo");
+}
+if (false) {} else if (true) { console.log("intermediario"); }
+if (true) {} else {}

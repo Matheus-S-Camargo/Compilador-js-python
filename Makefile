@@ -1,6 +1,7 @@
 CC	= gcc
 CFLAGS	= -Wall -g
 BUILD	= build
+PYTHON ?= python
 
 all: compilador
 
@@ -16,12 +17,8 @@ $(BUILD)/lex.yy.c: src/lexico.l $(BUILD)/grammar.tab.h | $(BUILD)
 compilador: $(BUILD)/grammar.tab.c $(BUILD)/lex.yy.c src/ast.c src/tabela.c src/semantica.c src/gerador.c src/main.c
 	$(CC) $(CFLAGS) -I$(BUILD) -Isrc -o compilador $^
 
-teste_gerador: src/ast.c src/gerador.c tests/teste_gerador.c
-	$(CC) $(CFLAGS) -Isrc -o tests/teste_gerador.exe $^
-
-test: teste_gerador compilador
-	./tests/teste_gerador.exe
-	./tests/rodar.sh
+test: compilador
+	$(PYTHON) tests/rodar.py
 
 clean:
-	rm -rf $(BUILD) compilador compilador.exe tests/teste_gerador.exe
+	rm -rf $(BUILD) compilador compilador.exe

@@ -1,4 +1,3 @@
-// Caso 07: funcoes, parametros e for
 
 let resultado = somar(2, 3);
 
@@ -23,3 +22,8 @@ for (let i = 0; i < 2; i++) {
 }
 
 console.log(resultado);
+function vazia() {
+  return;
+  console.log("erro");
+}
+vazia();
