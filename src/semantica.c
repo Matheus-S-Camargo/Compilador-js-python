@@ -6,6 +6,7 @@
 #include "tabela.h"
 
 static int erros = 0;
+static int profundidade_funcao = 0;   // > 0 quando dentro do corpo de uma funcao
 
 // nomes globais do javascript que o programa pode usar sem declarar.
 static const char *pre_definidos[] = { "console", NULL };
@@ -49,10 +50,88 @@ static int declarar(const char *nome, const char *categoria, const char *tipo, i
 }
 
 static void visitar(No *no);
+static void visitar_funcao(No *no);
 
 static void visitar_filhos(No *no){
     for (int i = 0; i < no->contador_filhos; i++){
         visitar(no->filhos[i]);
+    }
+}
+
+static int eh_funcao(No *no){
+    return no != NULL && strcmp(no->tipo, "function") == 0;
+}
+
+static void declarar_funcoes(No *lista);
+
+// Visita uma lista de statements (programa, bloco ou corpo de funcao).
+// Os corpos das funcoes sao analisados so no fim da lista, quando todas as
+// declaracoes do escopo ja existem: em JS uma funcao pode usar uma variavel
+// declarada depois dela, desde que seja chamada depois da declaracao.
+static void visitar_lista(No *lista){
+    declarar_funcoes(lista);
+    for (int i = 0; i < lista->contador_filhos; i++){
+        if (!eh_funcao(lista->filhos[i])){
+            visitar(lista->filhos[i]);
+        }
+    }
+    for (int i = 0; i < lista->contador_filhos; i++){
+        if (eh_funcao(lista->filhos[i])){
+            visitar_funcao(lista->filhos[i]);
+        }
+    }
+}
+
+// alvo valido de atribuicao, ++ ou --: variavel, membro (a.b) ou indice (a[i]).
+static int eh_alvo_atribuivel(No *no){
+    return no != NULL && (strcmp(no->tipo, "id") == 0 ||
+                          strcmp(no->tipo, "membro") == 0 ||
+                          strcmp(no->tipo, "index") == 0);
+}
+
+static void visitar_atribuicao(No *no){
+    No *alvo = no->contador_filhos > 0 ? no->filhos[0] : NULL;
+    if (alvo != NULL && !eh_alvo_atribuivel(alvo)){
+        erro_semantico(no->linha, "lado esquerdo de '%s' nao e atribuivel", no->valor);
+    }
+    visitar_filhos(no);
+}
+
+static void visitar_unop(No *no){
+    int altera = no->valor != NULL &&
+                 (strcmp(no->valor, "++") == 0 || strcmp(no->valor, "--") == 0);
+    No *alvo = no->contador_filhos > 0 ? no->filhos[0] : NULL;
+    if (altera && alvo != NULL && !eh_alvo_atribuivel(alvo)){
+        erro_semantico(no->linha, "operando de '%s' nao e atribuivel", no->valor);
+    }
+    visitar_filhos(no);
+}
+
+static void visitar_return(No *no){
+    if (profundidade_funcao == 0){
+        erro_semantico(no->linha, "'return' fora de funcao");
+    }
+    visitar_filhos(no);
+}
+
+// chamada direta de um nome simples, ex.: f(1, 2). Chamadas de metodo (a.b())
+// nao sao checadas aqui.
+static void verificar_chamada_simples(No *no){
+    if (no->valor == NULL || strchr(no->valor, '.') != NULL){
+        return;
+    }
+    Simbolo *s = buscar(no->valor);
+    if (s == NULL){
+        return;   // ja reportado como nao declarada
+    }
+    if (strcmp(s->categoria, "funcao") == 0){
+        if (no->contador_filhos != s->n_params){
+            erro_semantico(no->linha, "funcao '%s' espera %d argumento(s), mas recebeu %d",
+                           no->valor, s->n_params, no->contador_filhos);
+        }
+    } else if (strcmp(s->categoria, "variavel") == 0 && strcmp(s->tipo, "desconhecido") != 0){
+        // o tipo vem do valor inicial literal (num, str, bool, null)
+        erro_semantico(no->linha, "'%s' nao e uma funcao (valor do tipo %s)", no->valor, s->tipo);
     }
 }
 
@@ -80,12 +159,13 @@ static void visitar_funcao(No *no){
     No *corpo = no->filhos[1];
 
     abrir_escopo();
+    profundidade_funcao++;
     for (int i = 0; i < params->contador_filhos; i++){
         No *p = params->filhos[i];
         declarar(p->valor, "parametro", "desconhecido", p->linha);
     }
-    declarar_funcoes(corpo);
-    visitar_filhos(corpo);
+    visitar_lista(corpo);
+    profundidade_funcao--;
     fechar_escopo();
 }
 
@@ -125,7 +205,14 @@ static void visitar(No *no){
         verificar_uso(no->valor, no->linha);
     } else if (strcmp(no->tipo, "chamada") == 0){
         verificar_nome_base(no);
+        verificar_chamada_simples(no);
         visitar_filhos(no);
+    } else if (strcmp(no->tipo, "atribuicao") == 0){
+        visitar_atribuicao(no);
+    } else if (strcmp(no->tipo, "unop") == 0){
+        visitar_unop(no);
+    } else if (strcmp(no->tipo, "return") == 0){
+        visitar_return(no);
     } else if (strcmp(no->tipo, "membro") == 0){
         // o filho e o objeto (id, outro membro...), a propriedade nao e checada.
         visitar_filhos(no);
@@ -133,8 +220,7 @@ static void visitar(No *no){
         visitar_funcao(no);
     } else if (strcmp(no->tipo, "bloco") == 0){
         abrir_escopo();
-        declarar_funcoes(no);
-        visitar_filhos(no);
+        visitar_lista(no);
         fechar_escopo();
     } else if (strcmp(no->tipo, "for") == 0){
         // o "let" do init vale so dentro do for.
@@ -148,14 +234,14 @@ static void visitar(No *no){
 
 int analisar(No *raiz){
     erros = 0;
+    profundidade_funcao = 0;
     abrir_escopo();
     for (int i = 0; pre_definidos[i] != NULL; i++){
         inserir(pre_definidos[i], "objeto", "desconhecido", 1, 0);
     }
     if (raiz != NULL){
-        declarar_funcoes(raiz);
+        visitar_lista(raiz);
     }
-    visitar(raiz);
     fechar_escopo();
     return erros;
 }
